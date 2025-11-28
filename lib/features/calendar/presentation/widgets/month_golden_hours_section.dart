@@ -47,7 +47,8 @@ class MonthGoldenHoursSection extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.m),
           Wrap(
-            spacing: AppSpacing.l,
+            alignment: WrapAlignment.center,
+            spacing: AppSpacing.xl,
             runSpacing: AppSpacing.m,
             children: items
                 .map(
@@ -83,31 +84,29 @@ class _GoldenHourItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: item.color.withAlpha((255 * 0.18).round()),
             shape: BoxShape.circle,
           ),
-          child: Icon(item.icon, color: item.color),
+          child: Icon(item.icon, color: item.color, size: 26),
         ),
-        const SizedBox(width: AppSpacing.s),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              item.name,
-              style: AppTypography.calendarGoldenHourLabel(sizeClass),
-            ),
-            Text(
-              item.timeRange,
-              style: AppTypography.calendarGoldenHourTime(sizeClass),
-            ),
-          ],
+        const SizedBox(height: AppSpacing.s),
+        Text(
+          item.name,
+          style: AppTypography.calendarGoldenHourLabel(sizeClass),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          item.timeRange,
+          style: AppTypography.calendarGoldenHourTime(sizeClass),
+          textAlign: TextAlign.center,
         ),
       ],
     );

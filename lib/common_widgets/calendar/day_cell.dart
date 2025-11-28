@@ -29,7 +29,7 @@ class DayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final opacity = isCurrentMonth ? 1.0 : 0.45;
+    final opacity = isCurrentMonth ? 1.0 : 0.6;
     final border = isSelected
         ? Border.all(color: AppColors.accentBlue, width: 2)
         : null;
@@ -55,11 +55,11 @@ class DayCell extends StatelessWidget {
             children: [
               if (isSpecial)
                 Positioned(
-                  top: AppSpacing.xs,
+                  top: AppSpacing.l,
                   right: AppSpacing.xs,
                   child: Container(
-                    width: 4,  // nhỏ hơn cho giống iOS
-                    height: 4,
+                    width: 5,  
+                    height: 5,
                     decoration: const BoxDecoration(
                       color: AppColors.calendarDotRed,
                       shape: BoxShape.circle,

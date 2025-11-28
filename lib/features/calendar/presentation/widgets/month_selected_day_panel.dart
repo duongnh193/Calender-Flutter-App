@@ -80,6 +80,7 @@ class MonthSelectedDayPanel extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.m),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _ValueColumn(
                 label: 'GIỜ',
@@ -136,11 +137,11 @@ class _ValueColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(label, style: labelStyle),
+          Text(label, style: labelStyle, textAlign: TextAlign.center),
           const SizedBox(height: AppSpacing.xs),
-          Text(value, style: valueStyle),
+          Text(value, style: valueStyle, textAlign: TextAlign.center),
         ],
       ),
     );
