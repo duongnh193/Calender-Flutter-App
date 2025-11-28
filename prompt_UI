@@ -1,0 +1,436 @@
+BEGIN_UI_SPEC
+
+[ROLE]
+Bạn là senior Flutter UI engineer. Nhiệm vụ: triển khai giao diện frontend cho app lịch Việt (clone gần giống ảnh tham chiếu), dùng Flutter + Riverpod, code sạch, responsive, dễ bảo trì.
+
+Tập trung vào:  
+- Tổ chức component rõ ràng.  
+- Dùng design token (color, spacing, typography).  
+- Layout responsive cho điện thoại portrait (Android), ưu tiên width 360–480.
+
+=====================================================================
+A. DESIGN SYSTEM / TOKEN CHUNG
+=====================================================================
+
+1) Breakpoints & size class
+
+- Thiết kế base cho kích thước màn hình: 360 x 800 (dp).
+- Định nghĩa enum:
+
+  - SMALL: width < 360
+  - MEDIUM: 360 <= width < 480
+  - LARGE: width >= 480
+
+- Viết helper `ScreenSizeClass getSizeClass(double width)`:
+  - SMALL nếu width < 360
+  - MEDIUM nếu width < 480
+  - LARGE nếu còn lại
+
+Widget screen sẽ dùng `LayoutBuilder` để lấy `maxWidth`, map sang `sizeClass`, rồi truyền xuống widget con qua prop `sizeClass` hoặc `compact: bool`.
+
+2) Spacing token
+
+Dùng spacing thống nhất, không rải số magic:
+
+- xs = 4
+- s  = 8
+- m  = 12
+- l  = 16
+- xl = 24
+- xxl = 32
+
+3) Radius token
+
+- radiusSmall  = 6
+- radiusMedium = 12
+- radiusLarge  = 20
+- radiusPill   = 999 (cho chip “Tháng 11 - 2025”)
+
+4) Typography token
+
+Chỉ dùng các cỡ sau (scale nhẹ theo sizeClass nếu cần):
+
+- displayNumber (ngày to ở Daily):  
+  - MEDIUM: fontSize ≈ 110, weight w700  
+  - SMALL: 90  
+  - LARGE: 120
+
+- headline1: 22, w600 (tiêu đề lớn: “Khám phá”, “Thứ Sáu, 28 Tháng 11, 2025”)
+- headline2: 18, w600 (title section: “GIỜ HOÀNG ĐẠO”, “Tiện ích”)
+- subtitle1: 16, w500 (label như “THỨ SÁU”, “Hanoi | …”)
+- body1: 14, w400 (text chính, quote)
+- body2: 12, w400 (chú thích, âm lịch nhỏ trong calendar)
+- caption: 11, w400 (text nhỏ hơn)
+
+5) Màu sắc (không cần đúng hex 100%, chỉ cần semantic token)
+
+- primaryRed       : màu đỏ dùng cho ngày chọn, icon bottom nav active.
+- primaryGreen     : màu xanh lá dùng cho section “GIỜ HOÀNG ĐẠO”.
+- accentBlue       : màu viền ô ngày được chọn (border xanh).
+- backgroundDaily  : gradient vàng nhạt → xanh lá nhạt (daily screen).
+- backgroundApp    : xám rất nhạt (#F5F5F5 kiểu iOS).
+- textPrimary      : đen/xám đậm.
+- textSecondary    : xám trung bình.
+- textMuted        : xám nhạt.
+- dangerRedDot     : đỏ đậm cho chấm tròn (ngày đặc biệt).
+- cardBackground   : trắng.
+- dividerColor     : xám rất nhạt (#E5E5E5).
+
+Toàn bộ code UI chỉ được dùng màu thông qua AppColors (semantic name), không dùng hex trực tiếp trong widget.
+
+=====================================================================
+B. COMPONENT CHUNG
+=====================================================================
+
+1) Bottom navigation: `MainBottomNav`
+
+- 5 tab cố định (từ trái sang phải):
+  1. Lịch ngày
+  2. Lịch tháng
+  3. Ghi chú
+  4. Văn hoá Việt (chưa cần UI chi tiết)
+  5. Khám phá
+- Mỗi tab: icon + text (ví dụ “Lịch ngày”, “Lịch tháng”, …).
+- Tab active: icon + label dùng `primaryRed`.
+- Tab inactive: icon + label dùng `textSecondary`.
+- Height tổng: khoảng 56–64 dp.
+- Luôn cố định ở đáy màn (Scaffold.bottomNavigationBar).
+
+2) Calendar day cell chung: `DayCell`
+
+Dùng lại cho Month view + header trong Notes.
+
+Props:
+- `DateTime date`
+- `bool isCurrentMonth`
+- `bool isToday`
+- `bool isSelected`
+- `bool isSpecial` (có chấm đỏ)
+- `int? lunarDay`
+- `ScreenSizeClass sizeClass`
+
+Layout:
+- `AspectRatio(1.0)` để ô vuông.
+- Border:
+  - if isSelected: border 2dp accentBlue, bo góc radiusSmall.
+  - else: không border.
+- Opacity:
+  - if !isCurrentMonth: text giảm opacity (0.4–0.5).
+- Content (Column):
+  - Hàng trên: text ngày dương (body1 hoặc lớn hơn).
+  - Hàng dưới: text ngày âm (body2, xám hơn).
+  - Nếu isSpecial: chấm tròn nhỏ đỏ (dangerRedDot) ở góc trên bên phải (Positioned + Stack hoặc Row + dot).
+
+=====================================================================
+C. SCREEN 1 – DAILY SCREEN (LỊCH NGÀY)
+=====================================================================
+
+NAME: `DailyScreen`
+
+1) Layout tổng
+
+- Sử dụng `Scaffold`:
+  - `bottomNavigationBar`: MainBottomNav.
+  - `body`: Stack để hiển thị background + nội dung.
+
+Pseudo cấu trúc:
+
+- Scaffold
+  - body: Stack
+    - Layer 1: Positioned.fill → BackgroundDaily (gradient hoặc image)
+    - Layer 2: SafeArea
+      - child: Column (mainAxisSize: max)
+        - Expanded:
+          - SingleChildScrollView
+            - Padding (horizontal: AppSpacing.l, vertical: AppSpacing.m)
+              - Column (crossAxisAlignment: center)
+                1. `DailyHeaderMonthChip`
+                2. SizedBox(height: spacing)
+                3. `DailyDateNumber`
+                4. SizedBox(...)
+                5. `DailyWeekdayText`
+                6. SizedBox(...)
+                7. `DailyQuoteSection`
+                8. Spacer nhỏ
+                9. `DailyWeatherRow`
+                10. SizedBox(...)
+                11. `DailyDateDetailGrid`
+        - `DailyBottomSafeSpacing` (nếu cần thêm padding để không dính bottom nav)
+
+2) Component chi tiết
+
+2.1. `DailyHeaderMonthChip`
+
+- Vị trí: top center.
+- Nội dung chip:
+  - Text: “Tháng 11 - 2025”
+  - Style: body1/bold, màu textPrimary.
+  - Background: trắng semi-transparent hoặc sáng hơn backgroundDaily.
+  - Padding horizontal: AppSpacing.l, vertical: AppSpacing.s.
+  - BorderRadius: radiusPill.
+- Bên phải màn hình (trong cùng hàng, alignment end):
+  - 2 icon tròn xếp dọc (gallery + share) hoặc mứt 1 cột right:
+    - Mỗi icon trong 1 circle 40x40, background trắng, shadow nhẹ.
+
+2.2. `DailyDateNumber`
+
+- Text số ngày cực to (ví dụ “28”).
+- Font = `displayNumber`, màu textPrimary hoặc xanh đậm.
+- Center horizontally.
+
+2.3. `DailyWeekdayText`
+
+- Text: “THỨ SÁU”.
+- Style: headline2, all caps, weight w600, alignment center.
+
+2.4. `DailyQuoteSection`
+
+- Layout:
+  - Column:
+    - Text câu quote, body1, align center, max 3–4 dòng.
+    - Text nguồn (vd “Kinh dịch”), style italic (fontStyle.italic), align right.
+- Bên phải dưới có hình minh hoạ (mẹ & bé):
+  - Có thể đặt bằng `Row`:
+    - Expanded left: Text quote.
+    - Right: Image asset có chiều rộng khoảng 100–120dp, alignment bottom.
+  - Nếu khó, có thể stack image phía phải dưới bằng `Align`.
+
+2.5. `DailyWeatherRow`
+
+- Layout: Row, padding top/bottom m.
+- Left:
+  - Text: “Hanoi |” (body1, bold location, icon thời tiết nhỏ).
+- Right:
+  - Text: “23°C / 14 - 24°C”, body1.
+- Align: spaceBetween.
+
+2.6. `DailyDateDetailGrid`
+
+- Section màu trắng/nhạt, bo góc trên để phân cách rõ với vùng trên.
+- 2 hàng, 4 cột:
+
+  Hàng 1 (label): GIỜ – NGÀY – THÁNG – NĂM  
+  Hàng 2 (value lớn): 12:12 PM – 9 – 10 – 2025  
+  Hàng 3 (value nhỏ dưới): Giáp Ngọ – Tân Sửu – Đinh Hợi – Ất Tỵ
+
+- Grid layout:
+  - `Row` chứa 4 `Expanded`.
+  - Mỗi cột là `Column`:
+    - label: body2, textSecondary, all caps.
+    - value chính: headline2 hoặc lớn hơn, textPrimary.
+    - value phụ: body2, textSecondary.
+
+=====================================================================
+D. SCREEN 2 – MONTH SCREEN (LỊCH THÁNG)
+=====================================================================
+
+NAME: `MonthScreen`
+
+1) Layout tổng
+
+- Scaffold
+  - bottomNavigationBar: MainBottomNav
+  - body: SafeArea
+    - Column
+      1. `MonthHeader`
+      2. `MonthCalendarGrid` (chiếm phần trên)
+      3. `MonthSelectedDayPanel` (card info bên dưới)
+      4. `MonthGoldenHoursSection` (giờ hoàng đạo)
+      5. (Optional) Ad banner placeholder dưới cùng
+
+2) Component chi tiết
+
+2.1. `MonthHeader`
+
+- Vùng top hiển thị:
+  - Line 1 (Title): “Thứ Sáu, 28 Tháng 11, 2025”
+  - Line 2 (Sub): “9 Tháng 10 Âm lịch, Năm Ất Tỵ”
+- Phần navigation tháng:
+  - 2 icon mũi tên trái/phải để đổi tháng.
+  - Có thể hiển thị thêm dropdown tháng/năm ở giữa.
+- Layout cụ thể:
+  - Column:
+    - Row 1: 
+      - Icon back tháng (chevron left)
+      - Expanded: Center text “Tháng 11 2025”
+      - Icon next tháng (chevron right)
+    - SizedBox
+    - Text thứ + ngày + tháng + năm (headline1)
+    - Text âm lịch (body2, textSecondary).
+
+2.2. `MonthCalendarGrid`
+
+- Dùng Column:
+  - Row: label thứ: HAI, BA, TƯ, NĂM, SÁU, BẢY, C.N (body2, upper case, textSecondary).
+  - Grid ngày:
+    - Sử dụng `GridView.count` hoặc `Table`.  
+    - 7 cột x số hàng tùy tháng.
+    - Mỗi cell = `DayCell` (đã định nghĩa ở phần B).
+- Calendar phải hiển thị:
+  - Ngày tháng trước / sau (màu xám nhạt, isCurrentMonth = false).
+  - Ngày hôm nay (isToday = true → highlight màu nhẹ).
+  - Ngày đang chọn (isSelected = true → border xanh).
+  - Ngày đặc biệt (isSpecial = true → chấm đỏ).
+
+2.3. `MonthSelectedDayPanel`
+
+- Một card ngay dưới calendar, nền trắng, padding l, radiusMedium.
+- Nội dung tương tự Daily:
+  - Header row:  
+    - Bên trái: label “THỨ SÁU” + text “28 Tháng 11, 2025”.  
+    - Bên phải: dot đỏ + text “Ngày hoàng đạo”.
+  - Subtext: “9 Tháng 10, Ất Tỵ” (âm lịch).
+  - Bảng GIỜ – NGÀY – THÁNG – NĂM + can chi (giống `DailyDateDetailGrid` nhưng gọn hơn).
+
+2.4. `MonthGoldenHoursSection`
+
+- Section tiêu đề “GIỜ HOÀNG ĐẠO” trên nền xanh lá (primaryGreen).
+- Layout:
+  - Container full width, background primaryGreen nhạt.
+  - Padding l.
+  - Bên trong:
+    - Text “GIỜ HOÀNG ĐẠO” (headline2, màu trắng hoặc textPrimary).
+    - Row hoặc Wrap hiển thị các giờ:
+      - Mỗi item: icon con giáp + label tên + time range.
+      - Dùng `Row` hoặc `Wrap` với spacing m.
+
+=====================================================================
+E. SCREEN 3 – NOTES SCREEN (GHI CHÚ)
+=====================================================================
+
+NAME: `NotesScreen`
+
+1) Layout tổng
+
+- Scaffold
+  - bottomNavigationBar: MainBottomNav
+  - body: SafeArea
+    - Column
+      1. `NotesMonthHeader` (re-use phần MonthHeader nav tháng)
+      2. Expanded:
+         - `NotesList` (ListView)
+
+2) `NotesMonthHeader`
+
+- Giống header lịch tháng nhưng đơn giản hơn:
+  - Row:
+    - Icon chevron left
+    - Expanded:
+      - Column:
+        - Text “Tháng 11” (headline1)
+        - Text “2025” (subtitle1, textSecondary)
+    - Icon chevron right
+
+3) `NotesList`
+
+- List các sự kiện theo ngày.
+
+Item group:
+
+- `NotesDaySectionHeader`
+  - Text: “Chủ Nhật, 2 Tháng 11, 2025”
+  - Subtext: “13/9 Âm Lịch”
+  - Style: headline2 cho dòng ngày, body2/xám cho dòng âm lịch.
+
+- Dưới mỗi header là 1 hoặc nhiều `NoteItem`:
+
+`NoteItem`:
+
+- Layout: Row, padding vertical m.
+  - Left: Text “Cả ngày” hoặc “08:00” (body2, textSecondary).
+  - Center (Expanded): 
+    - Text tiêu đề sự kiện (body1, bold, textPrimary).
+  - Right: optional icon hoặc status (hiện tại không bắt buộc).
+- Giữa các item có `Divider` (color: dividerColor).
+
+=====================================================================
+F. SCREEN 4 – EXPLORE SCREEN (KHÁM PHÁ)
+=====================================================================
+
+NAME: `ExploreScreen`
+
+1) Layout tổng
+
+- Scaffold
+  - bottomNavigationBar: MainBottomNav
+  - body: SafeArea
+    - Column
+      1. AppBar đơn giản: title “Khám phá”, icon setting bên phải.
+      2. Expanded:
+         - SingleChildScrollView
+           - Padding horizontal: l, vertical: m
+             - Column
+               a. `ExploreSection(title: "Tiện ích", items: [...])`
+               b. SizedBox(height: xl)
+               c. `ExploreSection(title: "Nội dung khác", items: [...])`
+               d. SizedBox(height: xl)
+               e. Optional: icon/shortcut cuối (“Cổ tích Việt Nam”)
+
+2) `ExploreSection`
+
+Props:
+- title (String)
+- items (list ExploreItemModel: { icon, label })
+
+Layout:
+- Column:
+  - Text `title` (headline2, textPrimary).
+  - SizedBox(height: m).
+  - `GridView` tĩnh hoặc `Wrap`:
+    - Nếu dùng Grid:
+      - 4 cột trên MEDIUM/LARGE, 3 cột trên SMALL nếu cần.
+    - Mỗi cell = `ExploreItem`.
+
+3) `ExploreItem`
+
+- Circular icon + label dưới.
+- Layout:
+  - Column(mainAxisSize: min, crossAxisAlignment: center)
+    - Container:
+      - width/height ≈ 64 (SMALL: 56)
+      - shape tròn
+      - background màu riêng (theo loại item, có thể map cứng)
+      - child: Icon (center).
+    - SizedBox(height: s)
+    - Text label (body2, textPrimary, center).
+
+=====================================================================
+G. RESPONSIVE NOTES
+=====================================================================
+
+1) DailyScreen
+- Số ngày (displayNumber) scale theo width:
+  - baseSize = width * 0.3, clamp từ 90 đến 130.
+- Padding horizontal:
+  - SMALL: m
+  - MEDIUM/LARGE: l
+- Các text headline giảm 1–2 pt trên SMALL.
+
+2) MonthScreen
+- Calendar grid luôn chiếm full width, nhờ `AspectRatio` trong `DayCell`.
+- Nếu height không đủ, cho phép scroll vertical (bọc trong `SingleChildScrollView` hoặc `CustomScrollView`).
+
+3) NotesScreen
+- ListView chiếm toàn bộ phần còn lại, không cần thay đổi layout theo sizeClass, chỉ scale font-size nếu cần.
+
+4) ExploreScreen
+- Số cột grid:
+  - SMALL: 3
+  - MEDIUM/LARGE: 4
+- Kích thước icon tròn:
+  - SMALL: 56
+  - MEDIUM/LARGE: 64
+
+=====================================================================
+H. IMPLEMENTATION RULES
+=====================================================================
+
+1) Mỗi screen = 1 file riêng trong `features/<feature>/presentation/screens`.
+2) Mỗi component tái sử dụng (header, grid, day cell, section title…) = file riêng trong `widgets`.
+3) Không được dùng số literal cho padding/font-size trong widget.
+   - Luôn dùng `AppSpacing`, `AppTextStyles`, `AppColors`.
+4) Mọi screen đều nhận `ScreenSizeClass` từ `LayoutBuilder` ở root của screen (không truyền MediaQuery xuống sâu).
+5) State (ngày chọn, tháng hiện tại, tab hiện tại…) quản lý bằng Riverpod, không dựng `setState` lung tung.
+
+END_UI_SPEC
+
