@@ -25,33 +25,53 @@ class ExploreItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bubbleSize = sizeClass == ScreenSizeClass.small ? 56.0 : 64.0;
+    final isSmall = sizeClass == ScreenSizeClass.small;
+    final bubbleSize = isSmall ? 52.0 : 60.0;
+    final gap = isSmall ? AppSpacing.xs : AppSpacing.s;
+    final labelWidth = bubbleSize + AppSpacing.l;
+    final double estimatedMinHeight = bubbleSize + gap + (isSmall ? 28 : 32);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: bubbleSize,
-          height: bubbleSize,
-          decoration: BoxDecoration(
-            color: item.color.withAlpha((255 * 0.15).round()),
-            shape: BoxShape.circle,
+    final textStyle = AppTypography.body2(sizeClass)
+        .copyWith(color: AppColors.textPrimary);
+    
+    final lineHeight = (textStyle.fontSize ?? 14) * (textStyle.height ?? 1.2);
+    final minHeight = bubbleSize + gap + lineHeight * 2;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minWidth: bubbleSize,
+        minHeight: minHeight,
+        // maxWidth: labelWidth + 12,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: bubbleSize,
+            height: bubbleSize,
+            decoration: BoxDecoration(
+              color: item.color.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              item.icon,
+              color: item.color,
+              size: bubbleSize * 0.5,
+            ),
           ),
-          child: Icon(item.icon, color: item.color, size: bubbleSize * 0.5),
-        ),
-        const SizedBox(height: AppSpacing.s),
-        SizedBox(
-          width: bubbleSize + AppSpacing.l,
-          child: Text(
-            item.label,
-            style: AppTypography.body2(
-              sizeClass,
-            ).copyWith(color: AppColors.textPrimary),
-            textAlign: TextAlign.center,
-            maxLines: 2,
+          SizedBox(height: gap),
+          SizedBox(
+            width: labelWidth,
+            child: Text(
+              item.label,
+              style: textStyle,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-      ],
+        ],
+          ),
     );
   }
 }

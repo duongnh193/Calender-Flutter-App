@@ -30,8 +30,9 @@ class ExploreSection extends StatelessWidget {
           crossAxisCount: crossAxisCount,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: AppSpacing.l,
-          crossAxisSpacing: AppSpacing.l,
+          mainAxisSpacing: AppSpacing.m,
+          crossAxisSpacing: AppSpacing.m,
+          childAspectRatio: 0.75,
           children: items
               .map((item) => ExploreItem(item: item, sizeClass: sizeClass))
               .toList(),

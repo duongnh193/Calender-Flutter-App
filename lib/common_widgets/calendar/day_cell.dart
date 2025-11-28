@@ -33,21 +33,24 @@ class DayCell extends StatelessWidget {
     final border = isSelected
         ? Border.all(color: AppColors.accentBlue, width: 2)
         : null;
-    final baseColor = isToday
-        ? AppColors.backgroundDailyEnd
-        : AppColors.transparent;
+    final baseColor =
+        isToday ? AppColors.backgroundDailyEnd : AppColors.transparent;
+
+    final isSmall = sizeClass == ScreenSizeClass.small;
+    final padding = isSmall ? AppSpacing.xs : AppSpacing.s;
+    final gap = isSmall ? AppSpacing.xs / 2 : AppSpacing.xs;
 
     return GestureDetector(
       onTap: onTap,
-      child: AspectRatio(
-        aspectRatio: 1,
+      child: Opacity(
+        opacity: opacity,
         child: Container(
           decoration: BoxDecoration(
             color: baseColor.withAlpha((255 * (isToday ? 0.4 : 0)).round()),
             border: border,
             borderRadius: BorderRadius.circular(AppSpacing.m),
           ),
-          padding: const EdgeInsets.all(AppSpacing.s),
+          padding: EdgeInsets.all(padding),
           child: Stack(
             children: [
               if (isSpecial)
@@ -63,31 +66,39 @@ class DayCell extends StatelessWidget {
                     ),
                   ),
                 ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    '${date.day}',
-                    style: AppTypography.body1(sizeClass).copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+              Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${date.day}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.body1(sizeClass).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: gap),
+                      Text(
+                        lunarDay != null ? '$lunarDay' : '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.body2(sizeClass).copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    lunarDay != null ? '$lunarDay' : '',
-                    style: AppTypography.body2(
-                      sizeClass,
-                    ).copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
         ),
       ),
-    ).opacity(opacity);
+    ).opacity( opacity);
   }
 }
 
