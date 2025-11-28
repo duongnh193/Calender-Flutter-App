@@ -25,39 +25,57 @@ class MonthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final titleStyle = AppTypography.calendarHeaderTitle(sizeClass).copyWith(
+      fontSize: AppTypography.calendarHeaderTitle(sizeClass).fontSize! - 2,
+    );
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            IconButton(
-              onPressed: onPrevious,
-              icon: const Icon(Icons.chevron_left),
-            ),
-            Expanded(
-              child: Center(
-                child: Text(
-                  monthLabel,
-                  style: AppTypography.subtitle1(
-                    sizeClass,
-                  ).copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: onNext,
-              icon: const Icon(Icons.chevron_right),
-            ),
-          ],
+        IconButton(
+          onPressed: onPrevious,
+          icon: const Icon(
+            Icons.chevron_left,
+            color: AppColors.calendarNavArrow,
+          ),
         ),
-        const SizedBox(height: AppSpacing.s),
-        Text(primaryText, style: AppTypography.headline1(sizeClass)),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          subText,
-          style: AppTypography.body2(
-            sizeClass,
-          ).copyWith(color: AppColors.textSecondary),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      primaryText,
+                      style: titleStyle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    color: AppColors.calendarNavArrow,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs / 2),
+              Text(
+                subText,
+                style: AppTypography.calendarHeaderSubtitle(sizeClass),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          onPressed: onNext,
+          icon: const Icon(
+            Icons.chevron_right,
+            color: AppColors.calendarNavArrow,
+          ),
         ),
       ],
     );

@@ -32,60 +32,52 @@ class MonthSelectedDayPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labelStyle = AppTypography.body2(
-      sizeClass,
-    ).copyWith(color: AppColors.textSecondary);
-    final valueStyle = AppTypography.subtitle1(
-      sizeClass,
-    ).copyWith(fontWeight: FontWeight.w600);
+    final labelStyle = AppTypography.calendarPanelLabel(sizeClass);
+    final valueStyle = AppTypography.calendarPanelValue(sizeClass);
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withAlpha((255 * 0.03).round()),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppColors.calendarCardBackground,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.calendarCardBorder),
       ),
-      padding: const EdgeInsets.all(AppSpacing.l),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.l,
+        vertical: AppSpacing.m,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(weekdayLabel, style: AppTypography.headline2(sizeClass)),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(fullDateLabel, style: AppTypography.body1(sizeClass)),
-                ],
-              ),
-              const Spacer(),
-              Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: AppColors.dangerRedDot,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.s),
-                  Text(goodDayLabel, style: AppTypography.body2(sizeClass)),
-                ],
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.m,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.iosRed.withAlpha((255 * 0.1).round()),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              weekdayLabel,
+              style: AppTypography.body2(
+                sizeClass,
+              ).copyWith(color: AppColors.iosRed, fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(height: AppSpacing.s),
-          Text(lunarLabel, style: AppTypography.body2(sizeClass)),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  fullDateLabel,
+                  style: AppTypography.headline1(sizeClass),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.m),
+              Text(lunarLabel, style: AppTypography.body1(sizeClass)),
+            ],
+          ),
           const SizedBox(height: AppSpacing.m),
           Row(
             children: [
@@ -101,7 +93,7 @@ class MonthSelectedDayPanel extends StatelessWidget {
                 value: dayLabel,
                 sizeClass: sizeClass,
                 labelStyle: labelStyle,
-                valueStyle: valueStyle.copyWith(color: AppColors.primaryRed),
+                valueStyle: valueStyle.copyWith(color: AppColors.iosRed),
               ),
               _ValueColumn(
                 label: 'THÁNG',

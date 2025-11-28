@@ -58,10 +58,10 @@ class DayCell extends StatelessWidget {
                   top: AppSpacing.xs,
                   right: AppSpacing.xs,
                   child: Container(
-                    width: 6,
-                    height: 6,
+                    width: 4,  // nhỏ hơn cho giống iOS
+                    height: 4,
                     decoration: const BoxDecoration(
-                      color: AppColors.dangerRedDot,
+                      color: AppColors.calendarDotRed,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -76,19 +76,14 @@ class DayCell extends StatelessWidget {
                         '${date.day}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.body1(sizeClass).copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
+                        style: _dayTextStyle,
                       ),
                       SizedBox(height: gap),
                       Text(
                         lunarDay != null ? '$lunarDay' : '',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.body2(sizeClass).copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                        style: _lunarTextStyle,
                       ),
                     ],
                   ),
@@ -98,8 +93,18 @@ class DayCell extends StatelessWidget {
           ),
         ),
       ),
-    ).opacity( opacity);
+    ).opacity(opacity);
   }
+
+  TextStyle get _dayTextStyle {
+    // weekday thường vs Chủ Nhật
+    final base = date.weekday == DateTime.sunday
+        ? AppTypography.calendarDayWeekend(sizeClass)
+        : AppTypography.calendarDay(sizeClass);
+    return base;
+  }
+
+  TextStyle get _lunarTextStyle => AppTypography.calendarLunar(sizeClass);
 }
 
 extension on Widget {

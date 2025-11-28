@@ -29,7 +29,7 @@ class ExploreItem extends StatelessWidget {
     final bubbleSize = isSmall ? 52.0 : 60.0;
     final gap = isSmall ? AppSpacing.xs : AppSpacing.s;
     final labelWidth = bubbleSize + AppSpacing.l;
-    final double estimatedMinHeight = bubbleSize + gap + (isSmall ? 28 : 32);
+    // final double estimatedMinHeight = bubbleSize + gap + (isSmall ? 28 : 32);
 
     final textStyle = AppTypography.body2(sizeClass)
         .copyWith(color: AppColors.textPrimary);
@@ -50,6 +50,7 @@ class ExploreItem extends StatelessWidget {
             width: bubbleSize,
             height: bubbleSize,
             decoration: BoxDecoration(
+              // ignore: deprecated_member_use
               color: item.color.withOpacity(0.15),
               shape: BoxShape.circle,
             ),

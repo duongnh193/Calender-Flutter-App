@@ -22,13 +22,29 @@ class MonthGoldenHoursSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.l),
       decoration: BoxDecoration(
-        color: AppColors.primaryGreen.withAlpha((255 * 0.1).round()),
+        color: AppColors.calendarCardBackground,
         borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.calendarCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('GIỜ HOÀNG ĐẠO', style: AppTypography.headline2(sizeClass)),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.m,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.calendarGoldenHourTagBg,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              'GIỜ HOÀNG ĐẠO',
+              style: AppTypography.body1(
+                sizeClass,
+              ).copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
           const SizedBox(height: AppSpacing.m),
           Wrap(
             spacing: AppSpacing.l,
@@ -83,8 +99,14 @@ class _GoldenHourItem extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(item.name, style: AppTypography.subtitle1(sizeClass)),
-            Text(item.timeRange, style: AppTypography.body2(sizeClass)),
+            Text(
+              item.name,
+              style: AppTypography.calendarGoldenHourLabel(sizeClass),
+            ),
+            Text(
+              item.timeRange,
+              style: AppTypography.calendarGoldenHourTime(sizeClass),
+            ),
           ],
         ),
       ],

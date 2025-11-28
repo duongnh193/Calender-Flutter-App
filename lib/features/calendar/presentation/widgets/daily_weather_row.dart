@@ -24,18 +24,29 @@ class DailyWeatherRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Text(
-                location,
-                style: AppTypography.body1(
-                  sizeClass,
-                ).copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(width: AppSpacing.s),
-              const Icon(Icons.cloud, size: 18, color: AppColors.textSecondary),
-            ],
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    location,
+                    style: AppTypography.body1(
+                      sizeClass,
+                    ).copyWith(fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.s),
+                const Icon(
+                  Icons.cloud,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
           ),
+          const SizedBox(width: AppSpacing.s),
           Text(temperature, style: AppTypography.body1(sizeClass)),
         ],
       ),

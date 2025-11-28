@@ -31,57 +31,66 @@ class MonthScreen extends ConsumerWidget {
 
         return Scaffold(
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPaddingFor(sizeClass),
-                vertical: AppSpacing.l,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  MonthHeader(
-                    sizeClass: sizeClass,
-                    monthLabel: monthLabel,
-                    primaryText: primaryText,
-                    subText: subText,
-                    onPrevious: () => _shiftMonth(ref, -1),
-                    onNext: () => _shiftMonth(ref, 1),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final minHeight = constraints.maxHeight;
+                return SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPaddingFor(sizeClass),
+                    vertical: AppSpacing.l,
                   ),
-                  const SizedBox(height: AppSpacing.l),
-                  MonthCalendarGrid(
-                    sizeClass: sizeClass,
-                    month: focusedMonth,
-                    selectedDate: selectedDate,
-                    specialDates: specialDates,
-                    onSelect: (date) {
-                      ref.read(selectedDateProvider.notifier).state = date;
-                      ref.read(focusedMonthProvider.notifier).state = DateTime(
-                        date.year,
-                        date.month,
-                      );
-                    },
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: minHeight),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        MonthHeader(
+                          sizeClass: sizeClass,
+                          monthLabel: monthLabel,
+                          primaryText: primaryText,
+                          subText: subText,
+                          onPrevious: () => _shiftMonth(ref, -1),
+                          onNext: () => _shiftMonth(ref, 1),
+                        ),
+                        const SizedBox(height: AppSpacing.l),
+                        MonthCalendarGrid(
+                          sizeClass: sizeClass,
+                          month: focusedMonth,
+                          selectedDate: selectedDate,
+                          specialDates: specialDates,
+                          onSelect: (date) {
+                            ref.read(selectedDateProvider.notifier).state =
+                                date;
+                            ref.read(focusedMonthProvider.notifier).state =
+                                DateTime(date.year, date.month);
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.l),
+                        MonthSelectedDayPanel(
+                          sizeClass: sizeClass,
+                          weekdayLabel: _weekdayLabel(
+                            selectedDate,
+                          ).toUpperCase(),
+                          fullDateLabel:
+                              '${selectedDate.day} Tháng ${selectedDate.month}, ${selectedDate.year}',
+                          lunarLabel: '9 Tháng 10, Ất Tỵ',
+                          timeLabel: 'Giáp Ngọ',
+                          dayLabel: 'Tân Sửu',
+                          monthLabel: 'Đinh Hợi',
+                          yearLabel: 'Ất Tỵ',
+                        ),
+                        const SizedBox(height: AppSpacing.l),
+                        MonthGoldenHoursSection(
+                          sizeClass: sizeClass,
+                          items: _mockGoldenHours,
+                        ),
+                        const SizedBox(height: AppSpacing.l),
+                        _AdPlaceholder(sizeClass: sizeClass),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.l),
-                  MonthSelectedDayPanel(
-                    sizeClass: sizeClass,
-                    weekdayLabel: _weekdayLabel(selectedDate).toUpperCase(),
-                    fullDateLabel:
-                        '${selectedDate.day} Tháng ${selectedDate.month}, ${selectedDate.year}',
-                    lunarLabel: '9 Tháng 10, Ất Tỵ',
-                    timeLabel: 'Giáp Ngọ',
-                    dayLabel: 'Tân Sửu',
-                    monthLabel: 'Đinh Hợi',
-                    yearLabel: 'Ất Tỵ',
-                  ),
-                  const SizedBox(height: AppSpacing.l),
-                  MonthGoldenHoursSection(
-                    sizeClass: sizeClass,
-                    items: _mockGoldenHours,
-                  ),
-                  const SizedBox(height: AppSpacing.l),
-                  _AdPlaceholder(sizeClass: sizeClass),
-                ],
-              ),
+                );
+              },
             ),
           ),
         );
@@ -117,15 +126,15 @@ class MonthScreen extends ConsumerWidget {
 
 final _mockGoldenHours = [
   GoldenHourItem(
-    name: 'Dần',
-    timeRange: '3-5h',
-    color: AppColors.primaryGreen,
+    name: 'Tý',
+    timeRange: '23-1h',
+    color: AppColors.accentBlue,
     icon: Icons.pets,
   ),
   GoldenHourItem(
-    name: 'Mão',
-    timeRange: '5-7h',
-    color: AppColors.primaryGreen,
+    name: 'Sửu',
+    timeRange: '1-3h',
+    color: AppColors.accentOrange,
     icon: Icons.pets,
   ),
   GoldenHourItem(
@@ -135,15 +144,15 @@ final _mockGoldenHours = [
     icon: Icons.pets,
   ),
   GoldenHourItem(
-    name: 'Thân',
-    timeRange: '15-17h',
-    color: AppColors.primaryRed,
+    name: 'Thìn',
+    timeRange: '7-9h',
+    color: AppColors.primaryGreen,
     icon: Icons.pets,
   ),
   GoldenHourItem(
-    name: 'Tuất',
-    timeRange: '19-21h',
-    color: AppColors.accentBlue,
+    name: 'Thân',
+    timeRange: '15-17h',
+    color: AppColors.primaryRed,
     icon: Icons.pets,
   ),
   GoldenHourItem(

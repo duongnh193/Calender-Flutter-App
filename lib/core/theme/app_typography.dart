@@ -73,4 +73,76 @@ class AppTypography {
       color: AppColors.textMuted,
     );
   }
+
+  // Calendar styles
+  static TextStyle calendarHeaderTitle(ScreenSizeClass sizeClass) {
+    final delta = sizeClass == ScreenSizeClass.small ? -1.0 : 0.0;
+    return TextStyle(
+      fontSize: 21 + delta,
+      fontWeight: FontWeight.w600,
+      color: AppColors.calendarHeaderTitle,
+    );
+  }
+
+  static TextStyle calendarHeaderSubtitle(ScreenSizeClass sizeClass) {
+    return TextStyle(
+      fontSize: 14 + (sizeClass == ScreenSizeClass.small ? -1.0 : 0.0),
+      fontWeight: FontWeight.w400,
+      color: AppColors.calendarHeaderSubtitle,
+    );
+  }
+
+  static TextStyle calendarDay(ScreenSizeClass sizeClass) {
+    final delta = sizeClass == ScreenSizeClass.small ? -1.0 : 0.0;
+    return TextStyle(
+      fontSize: 20 + delta,
+      fontWeight: FontWeight.w900,
+      color: AppColors.textPrimary,
+    );
+  }
+
+  static TextStyle calendarDayWeekend(ScreenSizeClass sizeClass) =>
+      calendarDay(sizeClass).copyWith(color: AppColors.calendarWeekendText);
+
+  static TextStyle calendarLunar(ScreenSizeClass sizeClass) {
+    return TextStyle(
+      fontSize: 12 + (sizeClass == ScreenSizeClass.small ? -1.0 : 0.0),
+      fontWeight: FontWeight.w800,
+      color: AppColors.calendarLunarText,
+    );
+  }
+
+  static TextStyle calendarPanelLabel(ScreenSizeClass sizeClass) {
+    return TextStyle(
+      fontSize: 16 + (sizeClass == ScreenSizeClass.small ? -1.0 : 0.0),
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.3,
+      color: AppColors.textSecondary,
+    );
+  }
+
+  static TextStyle calendarPanelValue(ScreenSizeClass sizeClass) {
+    final delta = sizeClass == ScreenSizeClass.small ? -0.5 : 0.0;
+    return TextStyle(
+      fontSize: 16 + delta,
+      fontWeight: FontWeight.w600,
+      color: AppColors.textPrimary,
+    );
+  }
+
+  static TextStyle calendarGoldenHourLabel(ScreenSizeClass sizeClass) {
+    return TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      color: AppColors.calendarGoldenHourTextPrimary,
+    );
+  }
+
+  static TextStyle calendarGoldenHourTime(ScreenSizeClass sizeClass) {
+    return TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      color: AppColors.calendarGoldenHourTextSecondary,
+    );
+  }
 }

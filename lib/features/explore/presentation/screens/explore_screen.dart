@@ -66,16 +66,16 @@ class ExploreScreen extends ConsumerWidget {
                           sizeClass: sizeClass,
                         ),
                         const SizedBox(height: AppSpacing.xl),
-                        Center(
-                          child: ExploreItem(
-                            item: ExploreItemModel(
-                              icon: Icons.menu_book,
-                              label: 'Cổ tích Việt Nam',
-                              color: AppColors.accentBlue,
-                            ),
-                            sizeClass: sizeClass,
-                          ),
-                        ),
+                        // Center(
+                        //   child: ExploreItem(
+                        //     item: ExploreItemModel(
+                        //       icon: Icons.menu_book,
+                        //       label: 'Cổ tích Việt Nam',
+                        //       color: AppColors.accentBlue,
+                        //     ),
+                        //     sizeClass: sizeClass,
+                        //   ),
+                        // ),
                         const SizedBox(height: AppSpacing.l),
                         _AdPlaceholder(sizeClass: sizeClass),
                       ],
@@ -143,6 +143,11 @@ final _contentItems = <ExploreItemModel>[
   ExploreItemModel(
     icon: Icons.emoji_emotions,
     label: 'Truyện cười',
+    color: AppColors.accentBlue,
+  ),
+  ExploreItemModel(
+    icon: Icons.menu_book,
+    label: 'Cổ tích Việt Nam',
     color: AppColors.accentBlue,
   ),
 ];
