@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: lich-van-nien
+  datasource:
+    url: jdbc:mysql://localhost:3306/lich_van_nien?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+    username: root
+    password: root
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Ho_Chi_Minh
+    open-in-view: false
+  jackson:
+    time-zone: Asia/Ho_Chi_Minh
+
+server:
+  servlet:
+    context-path: /
+
+app:
+  calendar:
+    min-date: 1900-01-01
+    max-date: 2100-12-31
+    gen-start-year: 2000
+    gen-end-year: 2035
+
+# Redis optional, uncomment and adjust if used
+# spring:
+#   data:
+#     redis:
+#       host: localhost
+#       port: 6379
