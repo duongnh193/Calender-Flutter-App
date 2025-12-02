@@ -15,6 +15,7 @@ class MonthCalendarGrid extends StatelessWidget {
     required this.selectedDate,
     required this.specialDates,
     required this.onSelect,
+    this.lunarDayResolver,
   });
 
   final ScreenSizeClass sizeClass;
@@ -22,6 +23,7 @@ class MonthCalendarGrid extends StatelessWidget {
   final DateTime selectedDate;
   final Set<int> specialDates;
   final ValueChanged<DateTime> onSelect;
+  final int? Function(DateTime date)? lunarDayResolver;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +74,8 @@ class MonthCalendarGrid extends StatelessWidget {
                     date.day == now.day;
                 final isSpecial =
                     isCurrentMonth && specialDates.contains(date.day);
+                final resolvedLunar =
+                    lunarDayResolver != null ? lunarDayResolver!(date) : null;
 
                 return SizedBox(
                   width: cellWidth - (AppSpacing.l / 2),
@@ -82,7 +86,7 @@ class MonthCalendarGrid extends StatelessWidget {
                     isToday: isToday,
                     isSelected: isSelected,
                     isSpecial: isSpecial,
-                    lunarDay: date.day,
+                    lunarDay: resolvedLunar ?? date.day,
                     sizeClass: sizeClass,
                     onTap: () => onSelect(date),
                   ),

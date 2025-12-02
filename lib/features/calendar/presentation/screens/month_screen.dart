@@ -7,7 +7,9 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/di/providers.dart';
 import '../../application/calendar_providers.dart';
+import '../../domain/day_info.dart';
 import '../widgets/month_calendar_grid.dart';
 import '../widgets/month_golden_hours_section.dart';
 import '../widgets/month_header.dart';
@@ -23,11 +25,30 @@ class MonthScreen extends ConsumerWidget {
         final sizeClass = getSizeClass(constraints.maxWidth);
         final focusedMonth = ref.watch(focusedMonthProvider);
         final selectedDate = ref.watch(selectedDateProvider);
-        final specialDates = ref.watch(specialDatesProvider);
+        final asyncMonth = ref.watch(monthCalendarProvider(focusedMonth));
+        final monthData = asyncMonth.asData?.value;
         final monthLabel = 'Tháng ${focusedMonth.month} ${focusedMonth.year}';
+        final lunarLookup = {
+          for (final day in monthData?.days ?? [])
+            _formatDate(day.solarDate): day.lunar.day,
+        };
+        final specialDates = monthData != null
+            ? monthData.days
+                .where((d) => d.special)
+                .map((d) => d.solarDate.day)
+                .toSet()
+            : ref.watch(specialDatesProvider);
+
+        final asyncDay = ref.watch(dayInfoProvider(selectedDate));
+        final dayInfo = asyncDay.asData?.value;
+        final lunar = dayInfo?.lunar;
+        final canChi = dayInfo?.canChi;
+        final goldenHours = dayInfo?.goldenHours ?? [];
         final primaryText =
             '${_weekdayLabel(selectedDate)}, ${selectedDate.day} Tháng ${selectedDate.month}, ${selectedDate.year}';
-        final subText = '9 Tháng 10 Âm lịch, Năm Ất Tỵ';
+        final subText = lunar != null && canChi != null
+            ? '${lunar.day} Tháng ${lunar.month}${lunar.leapMonth ? " (nhuận)" : ""}, ${canChi.year}'
+            : 'Đang tải...';
 
         return Scaffold(
           body: SafeArea(
@@ -58,6 +79,8 @@ class MonthScreen extends ConsumerWidget {
                           month: focusedMonth,
                           selectedDate: selectedDate,
                           specialDates: specialDates,
+                          lunarDayResolver: (date) =>
+                              lunarLookup[_formatDate(date)],
                           onSelect: (date) {
                             ref.read(selectedDateProvider.notifier).state =
                                 date;
@@ -73,16 +96,22 @@ class MonthScreen extends ConsumerWidget {
                           ).toUpperCase(),
                           fullDateLabel:
                               '${selectedDate.day} Tháng ${selectedDate.month}, ${selectedDate.year}',
-                          lunarLabel: '9 Tháng 10, Ất Tỵ',
-                          timeLabel: 'Giáp Ngọ',
-                          dayLabel: 'Tân Sửu',
-                          monthLabel: 'Đinh Hợi',
-                          yearLabel: 'Ất Tỵ',
+                          lunarLabel: lunar != null && canChi != null
+                              ? '${lunar.day} Tháng ${lunar.month}${lunar.leapMonth ? " (nhuận)" : ""}, ${canChi.year}'
+                              : 'Đang tải...',
+                          timeLabel: _firstGoldenHourBranch(
+                                goldenHours,
+                              ) ??
+                              canChi?.day ??
+                              '--',
+                          dayLabel: canChi?.day ?? '--',
+                          monthLabel: canChi?.month ?? '--',
+                          yearLabel: canChi?.year ?? '--',
                         ),
                         const SizedBox(height: AppSpacing.l),
                         MonthGoldenHoursSection(
                           sizeClass: sizeClass,
-                          items: _mockGoldenHours,
+                          items: _mapGoldenHours(goldenHours),
                         ),
                         const SizedBox(height: AppSpacing.l),
                         _AdPlaceholder(sizeClass: sizeClass),
@@ -124,44 +153,83 @@ class MonthScreen extends ConsumerWidget {
   }
 }
 
-final _mockGoldenHours = [
-  GoldenHourItem(
-    name: 'Tý',
-    timeRange: '23-1h',
-    color: AppColors.accentBlue,
-    icon: Icons.pets,
-  ),
-  GoldenHourItem(
-    name: 'Sửu',
-    timeRange: '1-3h',
-    color: AppColors.accentOrange,
-    icon: Icons.pets,
-  ),
-  GoldenHourItem(
-    name: 'Tị',
-    timeRange: '9-11h',
-    color: AppColors.primaryRed,
-    icon: Icons.pets,
-  ),
-  GoldenHourItem(
-    name: 'Thìn',
-    timeRange: '7-9h',
-    color: AppColors.primaryGreen,
-    icon: Icons.pets,
-  ),
-  GoldenHourItem(
-    name: 'Thân',
-    timeRange: '15-17h',
-    color: AppColors.primaryRed,
-    icon: Icons.pets,
-  ),
-  GoldenHourItem(
-    name: 'Hợi',
-    timeRange: '21-23h',
-    color: AppColors.accentBlue,
-    icon: Icons.pets,
-  ),
-];
+String _formatDate(DateTime date) {
+  final m = date.month.toString().padLeft(2, '0');
+  final d = date.day.toString().padLeft(2, '0');
+  return '${date.year}-$m-$d';
+}
+
+String? _firstGoldenHourBranch(List<GoldenHour> items) {
+  if (items.isEmpty) return null;
+  return _branchLabel(items.first.branch);
+}
+
+List<GoldenHourItem> _mapGoldenHours(List<GoldenHour> items) {
+  return items
+      .map(
+        (gh) => GoldenHourItem(
+          name: _branchLabel(gh.branch) ?? gh.branch,
+          timeRange: gh.label,
+          color: _colorForBranch(gh.branch),
+          icon: _iconForBranch(gh.branch),
+        ),
+      )
+      .toList();
+}
+
+String? _branchLabel(String code) {
+  const map = {
+    'ti': 'Tý',
+    'suu': 'Sửu',
+    'dan': 'Dần',
+    'mao': 'Mão',
+    'thin': 'Thìn',
+    'ty': 'Tỵ',
+    'ngo': 'Ngọ',
+    'mui': 'Mùi',
+    'than': 'Thân',
+    'dau': 'Dậu',
+    'tuat': 'Tuất',
+    'hoi': 'Hợi',
+  };
+  return map[code.toLowerCase()];
+}
+
+Color _colorForBranch(String code) {
+  switch (code.toLowerCase()) {
+    case 'ti':
+    case 'ngo':
+    case 'than':
+      return AppColors.accentBlue;
+    case 'suu':
+    case 'mui':
+    case 'tuat':
+      return AppColors.accentOrange;
+    case 'thin':
+    case 'ty':
+    case 'dau':
+      return AppColors.primaryRed;
+    default:
+      return AppColors.primaryGreen;
+  }
+}
+
+IconData _iconForBranch(String code) {
+  switch (code.toLowerCase()) {
+    case 'ti':
+      return Icons.cruelty_free;
+    case 'suu':
+      return Icons.pets;
+    case 'ty':
+      return Icons.grass;
+    case 'ngo':
+      return Icons.bolt;
+    case 'than':
+      return Icons.emoji_nature;
+    default:
+      return Icons.star_rate_rounded;
+  }
+}
 
 class _AdPlaceholder extends StatelessWidget {
   const _AdPlaceholder({required this.sizeClass});

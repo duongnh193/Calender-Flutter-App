@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/di/providers.dart';
 import '../../application/calendar_providers.dart';
 import '../widgets/daily_header_month_chip.dart';
 import '../widgets/daily_quote_section.dart';
@@ -21,9 +22,22 @@ class DailyScreen extends ConsumerWidget {
       builder: (context, constraints) {
         final sizeClass = getSizeClass(constraints.maxWidth);
         final selectedDate = ref.watch(selectedDateProvider);
+        final asyncDay = ref.watch(dayInfoProvider(selectedDate));
+        final dayInfo = asyncDay.asData?.value;
+        final lunar = dayInfo?.lunar;
+        final canChi = dayInfo?.canChi;
         final monthLabel =
             'Tháng ${selectedDate.month.toString().padLeft(2, '0')} - ${selectedDate.year}';
         final weekdayLabel = _weekdayLabel(selectedDate).toUpperCase();
+        final lunarDayLabel =
+            lunar != null ? '${lunar.day}' : selectedDate.day.toString();
+        final lunarMonthLabel =
+            lunar != null ? '${lunar.month}' : selectedDate.month.toString();
+        final lunarYearLabel =
+            lunar != null ? '${lunar.year}' : selectedDate.year.toString();
+        final canChiDayLabel = canChi?.day ?? '--';
+        final canChiMonthLabel = canChi?.month ?? '--';
+        final canChiYearLabel = canChi?.year ?? '--';
 
         return Scaffold(
           body: Stack(
@@ -86,14 +100,14 @@ class DailyScreen extends ConsumerWidget {
                             const SizedBox(height: AppSpacing.s),
                             DateDetailGrid(
                               sizeClass: sizeClass,
-                              time: '12:12 PM',
-                              day: '9',
-                              month: '10',
-                              year: '${selectedDate.year}',
-                              timeCanChi: 'Giáp Ngọ',
-                              dayCanChi: 'Tân Sửu',
-                              monthCanChi: 'Đinh Hợi',
-                              yearCanChi: 'Ất Tỵ',
+                              time: '--',
+                              day: lunarDayLabel,
+                              month: lunarMonthLabel,
+                              year: lunarYearLabel,
+                              timeCanChi: '--',
+                              dayCanChi: canChiDayLabel,
+                              monthCanChi: canChiMonthLabel,
+                              yearCanChi: canChiYearLabel,
                             ),
                           ],
                         ),
