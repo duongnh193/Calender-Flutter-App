@@ -29,8 +29,8 @@ app:
   calendar:
     min-date: 1900-01-01
     max-date: 2100-12-31
-    gen-start-year: 2000
-    gen-end-year: 2035
+    gen-start-year: 1900
+    gen-end-year: 2100
 
 # Redis optional, uncomment and adjust if used
 # spring:
