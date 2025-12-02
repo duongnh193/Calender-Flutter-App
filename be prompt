@@ -1,0 +1,436 @@
+BEGIN_BACKEND_PROMPT
+
+[ROLE]
+Bạn là senior backend engineer, chuyên Spring Boot. Nhiệm vụ: thiết kế & implement backend production cho app Lịch Vạn Niên, theo SPEC dưới đây. Ưu tiên:
+- Độ chính xác của lịch âm/dương, can chi, giờ hoàng đạo, tử vi.
+- Code sạch, tách layer rõ ràng, dễ mở rộng.
+- Performance ổn cho traffic thật (stateless service, có thể scale ngang).
+
+======================================================================
+1. STACK & CẤU HÌNH CHUNG
+======================================================================
+
+- Ngôn ngữ: Java 17.
+- Build: Maven.
+- Framework: Spring Boot 3.x.
+- DB chính: MySQL 8.x.
+- Cache: Redis (optional, thiết kế sẵn interface, có thể mock nếu chưa cấu hình).
+- ORM: Spring Data JPA + Hibernate.
+- JSON: Jackson.
+- Logging: Slf4j + Logback (default Spring Boot).
+
+Yêu cầu:
+- Timezone hệ thống: Asia/Ho_Chi_Minh.
+- Tất cả API dùng JSON, prefix: `/api/v1`.
+- Error format thống nhất (status, code, message, details).
+
+======================================================================
+2. KIẾN TRÚC TỔNG QUAN & PACKAGE
+======================================================================
+
+Root package ví dụ: `com.duong.lichvanien` (có thể đổi tên nhưng giữ cấu trúc).
+
+Cấu trúc:
+
+com.duong.lichvanien
+  ├─ calendar
+  │    ├─ controller
+  │    ├─ service
+  │    ├─ repository
+  │    ├─ entity
+  │    └─ dto
+  ├─ goldenhour
+  │    ├─ service
+  │    ├─ repository
+  │    ├─ entity
+  │    └─ dto
+  ├─ horoscope
+  │    ├─ controller
+  │    ├─ service
+  │    ├─ repository
+  │    ├─ entity
+  │    └─ dto
+  ├─ zodiac
+  │    ├─ controller
+  │    ├─ service
+  │    ├─ repository
+  │    ├─ entity
+  │    └─ dto
+  └─ common
+       ├─ config
+       ├─ exception
+       ├─ response
+       └─ util
+
+Nguyên tắc:
+- Controller chỉ nhận/ trả DTO, không expose entity.
+- Service chứa logic domain (calendar, golden hour, horoscope).
+- Repository chỉ là JPA interface, không nhét business logic vào.
+- `common.exception` có GlobalExceptionHandler, custom exceptions.
+- `common.response` có envelope response nếu cần.
+
+======================================================================
+3. MODULE CALENDAR – NGÀY ÂM/DƯƠNG (CORE)
+======================================================================
+
+3.1. Bảng `day_info` (MySQL schema)
+
+Entity & table:
+
+TABLE day_info (
+    solar_date       DATE PRIMARY KEY,          -- khóa chính
+    weekday          TINYINT NOT NULL,          -- 1=Mon...7=Sun
+    lunar_day        TINYINT NOT NULL,
+    lunar_month      TINYINT NOT NULL,
+    lunar_year       SMALLINT NOT NULL,
+    lunar_leap_month TINYINT NOT NULL,          -- 0=thường,1=nhuận
+    can_chi_day      VARCHAR(16) NOT NULL,
+    can_chi_month    VARCHAR(16) NOT NULL,
+    can_chi_year     VARCHAR(16) NOT NULL,
+    is_good_day      TINYINT(1) NOT NULL DEFAULT 0,
+    note             VARCHAR(255) NULL
+);
+
+Yêu cầu:
+- Map chính xác sang JPA entity `DayInfoEntity`.
+- Primary key dùng `LocalDate solarDate`.
+- Thêm index (nếu cần): (lunar_year, lunar_month, lunar_day, lunar_leap_month).
+
+3.2. DTO & Response
+
+Tạo DTO:
+
+DayInfoResponse:
+- String solarDate (ISO yyyy-MM-dd)
+- String weekday  (MONDAY, TUESDAY,... hoặc localized)
+- LunarDate lunar
+  - int day
+  - int month
+  - int year
+  - boolean leapMonth
+- CanChi canChi
+  - String day
+  - String month
+  - String year
+- boolean goodDay
+- String note
+- List<GoldenHourResponse> goldenHours  (xem module goldenhour)
+
+MonthCalendarResponse:
+- int year
+- int month
+- List<MonthDayItem> days
+  - String solarDate
+  - int dayOfMonth
+  - LunarDate lunar
+  - boolean goodDay
+  - boolean special (optional, flag để FE render chấm đỏ)
+
+3.3. Repository & Service
+
+`DayInfoRepository`:
+- extends JpaRepository<DayInfoEntity, LocalDate>
+- Method:
+  - Optional<DayInfoEntity> findBySolarDate(LocalDate solarDate);
+  - List<DayInfoEntity> findBySolarDateBetween(LocalDate start, LocalDate end);
+  - Optional<DayInfoEntity> findByLunarYearAndLunarMonthAndLunarDayAndLunarLeapMonth(
+        int lunarYear, int lunarMonth, int lunarDay, int lunarLeapMonth
+    );
+
+`CalendarService`:
+- getDayInfo(LocalDate date): DayInfoResponse
+  - Validate date trong range cho phép (config MIN_DATE, MAX_DATE).
+  - Lấy từ cache (nếu có) → repo.
+  - Nếu không tồn tại, throw NotFoundException.
+  - Gọi GoldenHourService để bổ sung giờ hoàng đạo.
+- getMonthInfo(int year, int month): MonthCalendarResponse
+  - Lấy data từ firstDay → lastDay.
+  - Map list sang DTO.
+- convertSolarToLunar(LocalDate solarDate): LunarDate DTO
+  - Dùng day_info.
+- convertLunarToSolar(year, month, day, leap): LocalDate
+  - Query theo lunar_*.
+
+3.4. Controller
+
+`CalendarController` @RestController, base path `/api/v1/calendar`.
+
+Endpoints:
+
+GET /api/v1/calendar/day
+- Query param: date (String, yyyy-MM-dd, optional → default today)
+- Return: DayInfoResponse
+- Error:
+  - 400 nếu format sai.
+  - 404 nếu ngoài range hoặc không có record.
+
+GET /api/v1/calendar/month
+- Query: year, month (int).
+- Return: MonthCalendarResponse.
+
+GET /api/v1/calendar/convert/solar-to-lunar
+- Query: date
+- Return: LunarDate (JSON).
+
+GET /api/v1/calendar/convert/lunar-to-solar
+- Query: lunarYear, lunarMonth, lunarDay, leapMonth (boolean)
+- Return: SolarDateResponse { solarDate, weekday }.
+
+======================================================================
+4. MODULE GOLDEN HOUR – GIỜ HOÀNG ĐẠO
+======================================================================
+
+4.1. Bảng dữ liệu
+
+Bảng `zodiac_hour`:
+
+- branch       VARCHAR(8) PK   -- "Tý","Sửu",...
+- start_hour   TINYINT NOT NULL  -- giờ bắt đầu (0–23)
+- end_hour     TINYINT NOT NULL  -- giờ kết thúc (0–23)
+
+Bảng `golden_hour_pattern`:
+
+- day_branch    VARCHAR(8) PK -- địa chi ngày
+- good_branches VARCHAR(255)  -- danh sách địa chi giờ hoàng đạo, format CSV: "Tý,Sửu,Thìn,..."
+
+4.2. Entity, Repository
+
+Entity: `ZodiacHourEntity`, `GoldenHourPatternEntity`.
+
+Repository:
+- ZodiacHourRepository:
+  - List<ZodiacHourEntity> findByBranchIn(Collection<String> branches);
+- GoldenHourPatternRepository:
+  - Optional<GoldenHourPatternEntity> findByDayBranch(String branch);
+
+4.3. Service
+
+`GoldenHourService`:
+
+Method:
+
+List<GoldenHourResponse> getGoldenHours(String canChiDay)
+
+- Input: canChiDay (VD: "Tân Sửu") → extract "Sửu".
+- Lấy pattern theo `day_branch`.
+- Parse good_branches thành list địa chi giờ.
+- Lấy giờ tương ứng từ `zodiac_hour`.
+- Map sang DTO:
+
+GoldenHourResponse:
+- String branch    ("Dần")
+- int startHour    (3)
+- int endHour      (5)
+- String label     ("3-5h")
+
+Không cần controller riêng, chỉ dùng nội bộ CalendarService, nhưng viết service đủ clean để sau này expose API nếu cần.
+
+======================================================================
+5. MODULE ZODIAC & HOROSCOPE (TỬ VI)
+======================================================================
+
+5.1. Bảng `zodiac`
+
+TABLE zodiac (
+    id       BIGINT PK AUTO_INCREMENT,
+    code     VARCHAR(16) UNIQUE NOT NULL,   -- "ti","suu","dan"...
+    name_vi  VARCHAR(32) NOT NULL,
+    order_no TINYINT NOT NULL
+);
+
+5.2. Bảng `horoscope_yearly`
+
+TABLE horoscope_yearly (
+    id         BIGINT PK AUTO_INCREMENT,
+    zodiac_id  BIGINT NOT NULL,
+    year       INT NOT NULL,
+    summary    TEXT,
+    love       TEXT,
+    career     TEXT,
+    finance    TEXT,
+    health     TEXT,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_zodiac_year (zodiac_id, year),
+    FOREIGN KEY (zodiac_id) REFERENCES zodiac(id)
+);
+
+5.3. Bảng `horoscope_daily` (có thể để trống ban đầu)
+
+TABLE horoscope_daily (
+    id            BIGINT PK AUTO_INCREMENT,
+    zodiac_id     BIGINT NOT NULL,
+    solar_date    DATE NOT NULL,
+    general       TEXT,
+    love          TEXT,
+    career        TEXT,
+    finance       TEXT,
+    health        TEXT,
+    lucky_color   VARCHAR(64),
+    lucky_number  VARCHAR(64),
+    updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_zodiac_date (zodiac_id, solar_date),
+    FOREIGN KEY (zodiac_id) REFERENCES zodiac(id)
+);
+
+5.4. DTO
+
+ZodiacResponse:
+- Long id
+- String code
+- String nameVi
+- int orderNo
+
+HoroscopeYearlyResponse:
+- ZodiacShort zodiac { code, nameVi }
+- int year
+- String summary
+- String love
+- String career
+- String finance
+- String health
+
+HoroscopeDailyResponse:
+- ZodiacShort zodiac
+- String date
+- String general
+- String love
+- String career
+- String finance
+- String health
+- String luckyColor
+- String luckyNumber
+
+5.5. Service & Controller
+
+ZodiacService + ZodiacController:
+
+GET /api/v1/zodiacs
+- Return list ZodiacResponse (ordered by orderNo asc).
+
+HoroscopeService + HoroscopeController:
+
+GET /api/v1/horoscopes/yearly
+- Query: zodiacCode, year
+- Flow:
+  - find zodiac by code
+  - find horoscope_yearly by zodiac + year
+  - 404 nếu không có
+
+GET /api/v1/horoscopes/daily
+- Query: zodiacCode, date
+- Flow tương tự, query bảng daily.
+
+======================================================================
+6. CONFIG, EXCEPTION, QUALITY RULES
+======================================================================
+
+6.1. application.yml (gợi ý)
+
+- Cấu hình:
+  - spring.datasource.hikari.*
+  - spring.jpa.hibernate.ddl-auto=none (không auto drop/create prod).
+  - spring.jpa.open-in-view=false.
+  - spring.jackson.time-zone=Asia/Ho_Chi_Minh
+  - spring.jpa.properties.hibernate.jdbc.time_zone=Asia/Ho_Chi_Minh
+
+6.2. Exception handling
+
+Tạo:
+- `BusinessException` (extends RuntimeException, có errorCode).
+- `NotFoundException`, `BadRequestException`.
+- `GlobalExceptionHandler` (@RestControllerAdvice):
+  - Handle các exception này và trả JSON:
+
+```json
+{
+  "timestamp": "...",
+  "status": 404,
+  "code": "DAY_NOT_FOUND",
+  "message": "Day not found in supported range",
+  "path": "/api/v1/calendar/day"
+}
+
+6.3. Code style
+
+Dùng constructor injection (Lombok @RequiredArgsConstructor) cho service, controller.
+
+Không dùng field injection @Autowired trực tiếp.
+
+Không expose entity ra ngoài controller.
+
+Mỗi phương thức controller ngắn, chỉ gọi service.
+
+6.4. Test
+
+Ít nhất:
+
+Unit test cho CalendarService.getDayInfo:
+
+Case: ngày trong range, data tồn tại.
+
+Case: ngoài range → BadRequest.
+
+Case: không có record → NotFound.
+
+Unit test cho GoldenHourService.getGoldenHours:
+
+Với 1–2 can chi ngày, verify list branch giờ trả về đúng với pattern.
+
+======================================================================
+7. CÁCH TRẢ LỜI & TRIỂN KHAI TỪNG BƯỚC
+
+Khi triển khai, hãy làm theo step:
+
+STEP 1: Tạo skeleton project Maven Spring Boot:
+
+Pom.xml với dependency:
+
+spring-boot-starter-web
+
+spring-boot-starter-data-jpa
+
+mysql-connector-j
+
+spring-boot-starter-validation
+
+spring-boot-starter-test
+
+(optional) spring-boot-starter-data-redis
+
+lombok
+
+STEP 2: Tạo package structure như trên, empty class.
+
+STEP 3: Implement module Calendar:
+
+Entity DayInfoEntity
+
+Repository
+
+DTO
+
+Service
+
+Controller (day, month, convert)
+
+STEP 4: Implement module GoldenHour:
+
+Entity, repository, service.
+
+Tích hợp vào CalendarService.
+
+STEP 5: Implement module Zodiac & Horoscope:
+
+Entity (zodiac, horoscope_yearly, horoscope_daily)
+
+Repository, service, controller.
+
+STEP 6: Thêm GlobalExceptionHandler, config timezone, swagger nếu cần.
+
+Khi trả code:
+
+Luôn in FULL nội dung file (không dùng “…”).
+
+Ghi rõ đường dẫn file (vd: src/main/java/com/duong/lichvanien/calendar/entity/DayInfoEntity.java).
+
+Nếu giả định có config nào (như DB URL, Redis) hãy comment rõ chỗ cần sửa.
