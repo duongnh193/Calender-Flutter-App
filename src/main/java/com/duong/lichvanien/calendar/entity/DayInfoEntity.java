@@ -1,7 +1,10 @@
 package com.duong.lichvanien.calendar.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -43,8 +46,9 @@ public class DayInfoEntity {
     @Column(name = "can_chi_year", nullable = false, length = 16)
     private String canChiYear;
 
-    @Column(name = "is_good_day", nullable = false)
-    private boolean goodDay;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "good_day_type", nullable = false)
+    private GoodDayType goodDayType = GoodDayType.NORMAL;
 
     @Column(name = "note")
     private String note;

@@ -1,6 +1,8 @@
 package com.duong.lichvanien.calendar.service;
 
 import com.duong.lichvanien.calendar.entity.DayInfoEntity;
+import com.duong.lichvanien.calendar.entity.GoodDayType;
+import com.duong.lichvanien.calendar.goodday.GoodDayRuleService;
 import com.duong.lichvanien.calendar.repository.DayInfoRepository;
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar;
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar.CanChi;
@@ -24,6 +26,7 @@ public class DayInfoRegenerator implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DayInfoRegenerator.class);
 
     private final DayInfoRepository dayInfoRepository;
+    private final GoodDayRuleService goodDayRuleService;
 
     @Value("${app.calendar.gen-start-year:2000}")
     private int startYear;
@@ -52,7 +55,8 @@ public class DayInfoRegenerator implements CommandLineRunner {
             entity.setCanChiDay(canChi.day());
             entity.setCanChiMonth(canChi.month());
             entity.setCanChiYear(canChi.year());
-            entity.setGoodDay(false);
+            GoodDayType fortune = goodDayRuleService.resolve(lunar.month(), canChi.day());
+            entity.setGoodDayType(fortune);
             entity.setNote(null);
 
             dayInfoRepository.save(entity);

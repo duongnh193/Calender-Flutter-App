@@ -1,6 +1,7 @@
 package com.duong.lichvanien.calendar;
 
 import com.duong.lichvanien.calendar.entity.DayInfoEntity;
+import com.duong.lichvanien.calendar.entity.GoodDayType;
 import com.duong.lichvanien.calendar.repository.DayInfoRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ class DayInfoRepositoryTest {
         entity.setCanChiDay("Ất Tỵ");
         entity.setCanChiMonth("Đinh Hợi");
         entity.setCanChiYear("Ất Tỵ");
-        entity.setGoodDay(false);
+        entity.setGoodDayType(GoodDayType.NORMAL);
         dayInfoRepository.save(entity);
 
         DayInfoEntity e = dayInfoRepository.findById(LocalDate.of(2025, 12, 2)).orElseThrow();

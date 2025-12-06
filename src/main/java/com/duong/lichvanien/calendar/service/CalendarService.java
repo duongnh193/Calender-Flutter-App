@@ -6,6 +6,7 @@ import com.duong.lichvanien.calendar.dto.LunarDateDto;
 import com.duong.lichvanien.calendar.dto.MonthCalendarResponse;
 import com.duong.lichvanien.calendar.dto.MonthDayItem;
 import com.duong.lichvanien.calendar.entity.DayInfoEntity;
+import com.duong.lichvanien.calendar.entity.GoodDayType;
 import com.duong.lichvanien.calendar.repository.DayInfoRepository;
 import com.duong.lichvanien.common.exception.BadRequestException;
 import com.duong.lichvanien.common.exception.NotFoundException;
@@ -54,12 +55,12 @@ public class CalendarService {
                         .dayOfMonth(e.getSolarDate().getDayOfMonth())
                         .lunar(LunarDateDto.builder()
                                 .day(e.getLunarDay())
-                                .month(e.getLunarMonth())
-                                .year(e.getLunarYear())
-                                .leapMonth(e.getLunarLeapMonth() == 1)
-                                .build())
-                        .goodDay(e.isGoodDay())
-                        .special(e.isGoodDay())
+                        .month(e.getLunarMonth())
+                        .year(e.getLunarYear())
+                        .leapMonth(e.getLunarLeapMonth() == 1)
+                        .build())
+                        .goodDayType(e.getGoodDayType())
+                        .special(e.getGoodDayType() == GoodDayType.HOANG_DAO)
                         .build())
                 .toList();
         return MonthCalendarResponse.builder()
@@ -114,7 +115,7 @@ public class CalendarService {
                         .month(entity.getCanChiMonth())
                         .year(entity.getCanChiYear())
                         .build())
-                .goodDay(entity.isGoodDay())
+                .goodDayType(entity.getGoodDayType())
                 .note(entity.getNote())
                 .goldenHours(goldenHours)
                 .build();

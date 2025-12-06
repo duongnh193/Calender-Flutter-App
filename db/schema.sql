@@ -30,12 +30,20 @@ CREATE TABLE day_info (
                           can_chi_day      VARCHAR(32) NOT NULL,   -- "Tân Sửu"
                           can_chi_month    VARCHAR(32) NOT NULL,
                           can_chi_year     VARCHAR(32) NOT NULL,
-                          good_day_type     ENUM('NORMAL', 'HOANG DAO', 'HAC DAO') NOT NULL DEFAULT 'NORMAL',
+                          good_day_type     ENUM('NORMAL', 'HOANG_DAO', 'HAC_DAO') NOT NULL DEFAULT 'NORMAL',
                           note             VARCHAR(255) NULL,
                           KEY idx_lunar (lunar_year, lunar_month, lunar_day, lunar_leap_month)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE good_day_rule (
+                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                               lunar_month INT NOT NULL,
+                               branch_code VARCHAR(10) NOT NULL,
+                               fortune_type ENUM('NORMAL','HOANG_DAO','HAC_DAO') NOT NULL DEFAULT 'NORMAL'
+);
+
 
 -- ============================
 -- 3) ZODIAC_HOUR
@@ -68,6 +76,20 @@ CREATE TABLE golden_hour_pattern (
                                      CONSTRAINT fk_golden_day_branch
                                          FOREIGN KEY (day_branch_code) REFERENCES zodiac(code)
                                              ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ============================
+-- GOOD_DAY_RULE (Hoàng đạo / Hắc đạo)
+-- ============================
+
+CREATE TABLE good_day_rule (
+                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                               lunar_month TINYINT NOT NULL,
+                               branch_code VARCHAR(16) NOT NULL,
+                               fortune_type ENUM('NORMAL','HOANG_DAO','HAC_DAO') NOT NULL,
+                               KEY idx_good_day_rule (lunar_month, branch_code)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
