@@ -64,7 +64,7 @@ class DayInfo {
     required this.weekday,
     required this.lunar,
     required this.canChi,
-    required this.goodDay,
+    required this.goodDayType,
     this.note,
     this.goldenHours = const [],
   });
@@ -73,7 +73,7 @@ class DayInfo {
   final String weekday;
   final LunarDate lunar;
   final CanChi canChi;
-  final bool goodDay;
+  final GoodDayType goodDayType;
   final String? note;
   final List<GoldenHour> goldenHours;
 
@@ -82,7 +82,8 @@ class DayInfo {
         weekday: json['weekday'] as String,
         lunar: LunarDate.fromJson(json['lunar'] as Map<String, dynamic>),
         canChi: CanChi.fromJson(json['canChi'] as Map<String, dynamic>),
-        goodDay: json['goodDay'] as bool,
+        goodDayType:
+            GoodDayTypeX.fromString(json['goodDayType'] as String? ?? 'NORMAL'),
         note: json['note'] as String?,
         goldenHours: (json['goldenHours'] as List<dynamic>?)
                 ?.map((e) =>
@@ -90,4 +91,30 @@ class DayInfo {
                 .toList() ??
             const [],
       );
+}
+
+enum GoodDayType { normal, hoangDao, hacDao }
+
+extension GoodDayTypeX on GoodDayType {
+  static GoodDayType fromString(String raw) {
+    switch (raw.toUpperCase()) {
+      case 'HOANG_DAO':
+        return GoodDayType.hoangDao;
+      case 'HAC_DAO':
+        return GoodDayType.hacDao;
+      default:
+        return GoodDayType.normal;
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case GoodDayType.hoangDao:
+        return 'HOÀNG ĐẠO';
+      case GoodDayType.hacDao:
+        return 'HẮC ĐẠO';
+      default:
+        return '';
+    }
+  }
 }

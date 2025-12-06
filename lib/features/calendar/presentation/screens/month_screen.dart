@@ -32,6 +32,10 @@ class MonthScreen extends ConsumerWidget {
           for (final day in monthData?.days ?? [])
             _formatDate(day.solarDate): day.lunar.day,
         };
+        final goodDayLookup = {
+          for (final day in monthData?.days ?? [])
+            _formatDate(day.solarDate): day.goodDayType,
+        };
         final specialDates = monthData != null
             ? monthData.days
                 .where((d) => d.special)
@@ -44,6 +48,8 @@ class MonthScreen extends ConsumerWidget {
         final lunar = dayInfo?.lunar;
         final canChi = dayInfo?.canChi;
         final goldenHours = dayInfo?.goldenHours ?? [];
+        final selectedGoodDay =
+            dayInfo?.goodDayType ?? goodDayLookup[_formatDate(selectedDate)];
         final primaryText =
             '${_weekdayLabel(selectedDate)}, ${selectedDate.day} Tháng ${selectedDate.month}, ${selectedDate.year}';
         final subText = lunar != null && canChi != null
@@ -93,7 +99,7 @@ class MonthScreen extends ConsumerWidget {
                           sizeClass: sizeClass,
                           weekdayLabel: _weekdayLabel(
                             selectedDate,
-                          ).toUpperCase(),
+                          ).toUpperCase() + _goodDayTag(selectedGoodDay),
                           fullDateLabel:
                               '${selectedDate.day} Tháng ${selectedDate.month}, ${selectedDate.year}',
                           lunarLabel: lunar != null && canChi != null
@@ -157,6 +163,18 @@ String _formatDate(DateTime date) {
   final m = date.month.toString().padLeft(2, '0');
   final d = date.day.toString().padLeft(2, '0');
   return '${date.year}-$m-$d';
+}
+
+String _goodDayTag(GoodDayType? type) {
+  if (type == null) return '';
+  switch (type) {
+    case GoodDayType.hoangDao:
+      return ' • HOÀNG ĐẠO';
+    case GoodDayType.hacDao:
+      return ' • HẮC ĐẠO';
+    default:
+      return '';
+  }
 }
 
 String? _firstGoldenHourBranch(List<GoldenHour> items) {

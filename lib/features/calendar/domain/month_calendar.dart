@@ -5,21 +5,22 @@ class MonthDayItem {
     required this.solarDate,
     required this.dayOfMonth,
     required this.lunar,
-    required this.goodDay,
+    required this.goodDayType,
     required this.special,
   });
 
   final DateTime solarDate;
   final int dayOfMonth;
   final LunarDate lunar;
-  final bool goodDay;
+  final GoodDayType goodDayType;
   final bool special;
 
   factory MonthDayItem.fromJson(Map<String, dynamic> json) => MonthDayItem(
         solarDate: DateTime.parse(json['solarDate'] as String),
         dayOfMonth: json['dayOfMonth'] as int,
         lunar: LunarDate.fromJson(json['lunar'] as Map<String, dynamic>),
-        goodDay: json['goodDay'] as bool,
+        goodDayType: GoodDayTypeX.fromString(
+            json['goodDayType'] as String? ?? 'NORMAL'),
         special: json['special'] as bool,
       );
 }
