@@ -7,6 +7,7 @@ import com.duong.lichvanien.calendar.repository.DayInfoRepository;
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar;
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar.CanChi;
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar.LunarDate;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @Profile("gen-day-info")
@@ -27,6 +30,7 @@ public class DayInfoRegenerator implements CommandLineRunner {
 
     private final DayInfoRepository dayInfoRepository;
     private final GoodDayRuleService goodDayRuleService;
+    private final EntityManager entityManager;
 
     @Value("${app.calendar.gen-start-year:2000}")
     private int startYear;
@@ -40,6 +44,7 @@ public class DayInfoRegenerator implements CommandLineRunner {
         dayInfoRepository.deleteAllInBatch();
         LocalDate current = LocalDate.of(startYear, 1, 1);
         LocalDate end = LocalDate.of(endYear, 12, 31);
+        List<DayInfoEntity> buffer = new ArrayList<>();
         int count = 0;
         while (!current.isAfter(end)) {
             LunarDate lunar = VietnameseLunarCalendar.solarToLunar(current);
@@ -59,13 +64,22 @@ public class DayInfoRegenerator implements CommandLineRunner {
             entity.setGoodDayType(fortune);
             entity.setNote(null);
 
-            dayInfoRepository.save(entity);
-            count++;
-            if (count % 500 == 0) {
+//            dayInfoRepository.save(entity);
+            buffer.add(entity);
+            if (buffer.size() == 500) {
+                dayInfoRepository.saveAll(buffer);
                 dayInfoRepository.flush();
+                entityManager.clear();
+                buffer.clear();
                 log.info("Generated {} records up to {}", count, current);
             }
             current = current.plusDays(1);
+            count++;
+        }
+        if (!buffer.isEmpty()) {
+            dayInfoRepository.saveAll(buffer);
+            dayInfoRepository.flush();
+            entityManager.clear();
         }
         log.info("Completed regenerating day_info, total {} records", count);
     }

@@ -1,9 +1,11 @@
 package com.duong.lichvanien.calendar.goodday;
 
 import com.duong.lichvanien.calendar.entity.GoodDayType;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -30,15 +32,34 @@ public class GoodDayRuleService {
 
     private final GoodDayRuleRepository repository;
 
+    private Map<Integer, Map<String, GoodDayType>> ruleCache;
+
+    @PostConstruct
+    public void init() {
+        Map<Integer, Map<String, GoodDayType>> tmp = new HashMap<>();
+
+        for (GoodDayRuleEntity e : repository.findAll()) {
+            tmp
+                    .computeIfAbsent(e.getLunarMonth(), k -> new HashMap<>())
+                    .put(e.getBranchCode(), e.getFortuneType());
+        }
+
+        ruleCache = tmp;
+    }
+
     public GoodDayType resolve(int lunarMonth, String dayCanChi) {
         String branchName = extractBranch(dayCanChi);
         String code = toBranchCode(branchName);
         if (code == null) {
             return GoodDayType.NORMAL;
         }
-        return repository.findByLunarMonthAndBranchCode(lunarMonth, code)
-                .map(GoodDayRuleEntity::getFortuneType)
-                .orElse(GoodDayType.NORMAL);
+
+        Map<String, GoodDayType> byBranch = ruleCache.get(lunarMonth);
+        if (byBranch == null) {
+            return GoodDayType.NORMAL;
+        }
+
+        return byBranch.getOrDefault(code, GoodDayType.NORMAL);
     }
 
     private String extractBranch(String canChi) {
