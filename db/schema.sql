@@ -30,7 +30,7 @@ CREATE TABLE day_info (
                           can_chi_day      VARCHAR(32) NOT NULL,   -- "Tân Sửu"
                           can_chi_month    VARCHAR(32) NOT NULL,
                           can_chi_year     VARCHAR(32) NOT NULL,
-                          is_good_day      TINYINT(1) NOT NULL DEFAULT 0,
+                          good_day_type     ENUM('NORMAL', 'HOANG DAO', 'HAC DAO') NOT NULL DEFAULT 'NORMAL',
                           note             VARCHAR(255) NULL,
                           KEY idx_lunar (lunar_year, lunar_month, lunar_day, lunar_leap_month)
 ) ENGINE=InnoDB
