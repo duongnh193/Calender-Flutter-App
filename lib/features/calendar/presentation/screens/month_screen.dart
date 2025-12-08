@@ -38,7 +38,7 @@ class MonthScreen extends ConsumerWidget {
         };
         final specialDates = monthData != null
             ? monthData.days
-                .where((d) => d.special)
+                .where((d) => d.special || d.goodDayType == GoodDayType.hacDao)
                 .map((d) => d.solarDate.day)
                 .toSet()
             : ref.watch(specialDatesProvider);
@@ -53,7 +53,7 @@ class MonthScreen extends ConsumerWidget {
         final primaryText =
             '${_weekdayLabel(selectedDate)}, ${selectedDate.day} Tháng ${selectedDate.month}, ${selectedDate.year}';
         final subText = lunar != null && canChi != null
-            ? '${lunar.day} Tháng ${lunar.month}${lunar.leapMonth ? " (nhuận)" : ""}, ${canChi.year}'
+            ? '${lunar.day} Tháng ${lunar.month} Âm Lịch, Năm ${canChi.year}'
             : 'Đang tải...';
 
         return Scaffold(
@@ -87,6 +87,13 @@ class MonthScreen extends ConsumerWidget {
                           specialDates: specialDates,
                           lunarDayResolver: (date) =>
                               lunarLookup[_formatDate(date)],
+                          dotColorResolver: (date) {
+                            final type = goodDayLookup[_formatDate(date)];
+                            if (type == GoodDayType.hacDao) {
+                              return AppColors.calendarDotBlack;
+                            }
+                            return AppColors.calendarDotRed;
+                          },
                           onSelect: (date) {
                             ref.read(selectedDateProvider.notifier).state =
                                 date;
@@ -103,7 +110,7 @@ class MonthScreen extends ConsumerWidget {
                           fullDateLabel:
                               '${selectedDate.day} Tháng ${selectedDate.month}, ${selectedDate.year}',
                           lunarLabel: lunar != null && canChi != null
-                              ? '${lunar.day} Tháng ${lunar.month}${lunar.leapMonth ? " (nhuận)" : ""}, ${canChi.year}'
+                              ? '${lunar.day} Tháng ${lunar.month}, ${canChi.year}'
                               : 'Đang tải...',
                           timeLabel: _firstGoldenHourBranch(
                                 goldenHours,

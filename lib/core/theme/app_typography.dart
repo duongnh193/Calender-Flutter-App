@@ -23,8 +23,8 @@ class AppTypography {
   static TextStyle headline1(ScreenSizeClass sizeClass) {
     final delta = sizeClass == ScreenSizeClass.small ? -1.0 : 0.0;
     return TextStyle(
-      fontSize: 22 + delta,
-      fontWeight: FontWeight.w600,
+      fontSize: 14 + delta,
+      fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     );
   }
@@ -78,16 +78,16 @@ class AppTypography {
   static TextStyle calendarHeaderTitle(ScreenSizeClass sizeClass) {
     final delta = sizeClass == ScreenSizeClass.small ? -1.0 : 0.0;
     return TextStyle(
-      fontSize: 21 + delta,
-      fontWeight: FontWeight.w600,
+      fontSize: 16 + delta,
+      fontWeight: FontWeight.w800,
       color: AppColors.calendarHeaderTitle,
     );
   }
 
   static TextStyle calendarHeaderSubtitle(ScreenSizeClass sizeClass) {
     return TextStyle(
-      fontSize: 14 + (sizeClass == ScreenSizeClass.small ? -1.0 : 0.0),
-      fontWeight: FontWeight.w400,
+      fontSize: 12 + (sizeClass == ScreenSizeClass.small ? -1.0 : 0.0),
+      fontWeight: FontWeight.w700,
       color: AppColors.calendarHeaderSubtitle,
     );
   }
@@ -95,7 +95,7 @@ class AppTypography {
   static TextStyle calendarDay(ScreenSizeClass sizeClass) {
     final delta = sizeClass == ScreenSizeClass.small ? -1.0 : 0.0;
     return TextStyle(
-      fontSize: 20 + delta,
+      fontSize: 25 + delta,
       fontWeight: FontWeight.w900,
       color: AppColors.textPrimary,
     );
@@ -106,8 +106,8 @@ class AppTypography {
 
   static TextStyle calendarLunar(ScreenSizeClass sizeClass) {
     return TextStyle(
-      fontSize: 12 + (sizeClass == ScreenSizeClass.small ? -1.0 : 0.0),
-      fontWeight: FontWeight.w800,
+      fontSize: 18 + (sizeClass == ScreenSizeClass.small ? -1.0 : 0.0),
+      fontWeight: FontWeight.w700,
       color: AppColors.calendarLunarText,
     );
   }
@@ -143,6 +143,37 @@ class AppTypography {
       fontSize: 12,
       fontWeight: FontWeight.w400,
       color: AppColors.calendarGoldenHourTextSecondary,
+    );
+  }
+
+  // Date detail (daily) styles
+  static TextStyle dateDetailLabel(ScreenSizeClass sizeClass) {
+    final delta = sizeClass == ScreenSizeClass.small ? -0.5 : 0.0;
+    return TextStyle(
+      fontSize: 16 + delta,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.3,
+      // ignore: deprecated_member_use
+      color: AppColors.textPrimary,
+    );
+  }
+
+  static TextStyle dateDetailValue(ScreenSizeClass sizeClass) {
+    final delta = sizeClass == ScreenSizeClass.small ? -2.0 : 0.0;
+    return TextStyle(
+      fontSize: 16 + delta,
+      fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
+      height: 4.5 + delta,
+    );
+  }
+
+  static TextStyle dateDetailCanChi(ScreenSizeClass sizeClass) {
+    final delta = sizeClass == ScreenSizeClass.small ? -1.0 : 0.0;
+    return TextStyle(
+      fontSize: 15 + delta,
+      fontWeight: FontWeight.w600,
+      color: AppColors.textPrimary,
     );
   }
 }

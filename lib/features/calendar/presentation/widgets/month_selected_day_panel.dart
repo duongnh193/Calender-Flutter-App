@@ -17,7 +17,7 @@ class MonthSelectedDayPanel extends StatelessWidget {
     required this.dayLabel,
     required this.monthLabel,
     required this.yearLabel,
-    this.goodDayLabel = 'Ngày hoàng đạo',
+    // this.goodDayLabel = 'Ngày hoàng đạo',
   });
 
   final ScreenSizeClass sizeClass;
@@ -28,7 +28,7 @@ class MonthSelectedDayPanel extends StatelessWidget {
   final String dayLabel;
   final String monthLabel;
   final String yearLabel;
-  final String goodDayLabel;
+  // final String goodDayLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class MonthSelectedDayPanel extends StatelessWidget {
               ).copyWith(color: AppColors.iosRed, fontWeight: FontWeight.w700),
             ),
           ),
-          const SizedBox(height: AppSpacing.s),
+          const SizedBox(height: AppSpacing.m),
           Row(
             children: [
               Expanded(
@@ -74,13 +74,14 @@ class MonthSelectedDayPanel extends StatelessWidget {
                   style: AppTypography.headline1(sizeClass),
                 ),
               ),
-              const SizedBox(width: AppSpacing.m),
+              const SizedBox(width: AppSpacing.s),
               Text(lunarLabel, style: AppTypography.body1(sizeClass)),
             ],
           ),
-          const SizedBox(height: AppSpacing.m),
+          const SizedBox(height: AppSpacing.l),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _ValueColumn(
                 label: 'GIỜ',

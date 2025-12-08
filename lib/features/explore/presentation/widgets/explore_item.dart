@@ -26,7 +26,7 @@ class ExploreItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSmall = sizeClass == ScreenSizeClass.small;
-    final bubbleSize = isSmall ? 52.0 : 60.0;
+    final bubbleSize = isSmall ? 42.0 : 50.0;
     final gap = isSmall ? AppSpacing.xs : AppSpacing.s;
     final labelWidth = bubbleSize + AppSpacing.l;
     // final double estimatedMinHeight = bubbleSize + gap + (isSmall ? 28 : 32);
@@ -57,7 +57,7 @@ class ExploreItem extends StatelessWidget {
             child: Icon(
               item.icon,
               color: item.color,
-              size: bubbleSize * 0.5,
+              size: bubbleSize * 0.55,
             ),
           ),
           SizedBox(height: gap),

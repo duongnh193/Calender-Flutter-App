@@ -15,6 +15,7 @@ class DayCell extends StatelessWidget {
     required this.isSpecial,
     required this.lunarDay,
     required this.sizeClass,
+    this.dotColor = AppColors.calendarDotRed,
     this.onTap,
   });
 
@@ -25,19 +26,20 @@ class DayCell extends StatelessWidget {
   final bool isSpecial;
   final int? lunarDay;
   final ScreenSizeClass sizeClass;
+  final Color dotColor;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final opacity = isCurrentMonth ? 1.0 : 0.6;
+    final opacity = isCurrentMonth ? 1.0 : 0.7;
     final border = isSelected
-        ? Border.all(color: AppColors.accentBlue, width: 2)
+        ? Border.all(color: AppColors.accentBlue, width: 1)
         : null;
     final baseColor =
         isToday ? AppColors.backgroundDailyEnd : AppColors.transparent;
 
     final isSmall = sizeClass == ScreenSizeClass.small;
-    final padding = isSmall ? AppSpacing.xs : AppSpacing.s;
+    final padding = isSmall ? AppSpacing.xxs / 2 : AppSpacing.xxs;
     final gap = isSmall ? AppSpacing.xs / 2 : AppSpacing.xs;
 
     return GestureDetector(
@@ -46,7 +48,7 @@ class DayCell extends StatelessWidget {
         opacity: opacity,
         child: Container(
           decoration: BoxDecoration(
-            color: baseColor.withAlpha((255 * (isToday ? 0.4 : 0)).round()),
+            color: baseColor.withAlpha((255 * (isToday ? 0.5 : 0)).round()),
             border: border,
             borderRadius: BorderRadius.circular(AppSpacing.m),
           ),
@@ -55,13 +57,13 @@ class DayCell extends StatelessWidget {
             children: [
               if (isSpecial)
                 Positioned(
-                  top: AppSpacing.l,
-                  right: AppSpacing.xs,
+                  bottom: AppSpacing.xs,
+                  right: AppSpacing.xs+1,
                   child: Container(
-                    width: 5,  
-                    height: 5,
-                    decoration: const BoxDecoration(
-                      color: AppColors.calendarDotRed,
+                    width: 3,  
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: dotColor,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -78,7 +80,7 @@ class DayCell extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: _dayTextStyle,
                       ),
-                      SizedBox(height: gap),
+                      // SizedBox(height: gap),
                       Text(
                         lunarDay != null ? '$lunarDay' : '',
                         maxLines: 1,

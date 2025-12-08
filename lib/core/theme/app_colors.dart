@@ -33,6 +33,7 @@ class AppColors {
   static const Color calendarWeekendText = iosRed;
   static const Color calendarLunarText = iosGraySecondary;
   static const Color calendarDotRed = iosRed;
+  static const Color calendarDotBlack = textPrimary;
   static const Color calendarHeaderTitle = iosGrayPrimary;
   static const Color calendarHeaderSubtitle = iosGraySecondary;
   static const Color calendarNavArrow = iosLinkBlue;

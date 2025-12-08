@@ -65,6 +65,7 @@ class DayInfo {
     required this.lunar,
     required this.canChi,
     required this.goodDayType,
+    this.currentTime,
     this.note,
     this.goldenHours = const [],
   });
@@ -74,6 +75,7 @@ class DayInfo {
   final LunarDate lunar;
   final CanChi canChi;
   final GoodDayType goodDayType;
+  final CurrentTime? currentTime;
   final String? note;
   final List<GoldenHour> goldenHours;
 
@@ -84,12 +86,33 @@ class DayInfo {
         canChi: CanChi.fromJson(json['canChi'] as Map<String, dynamic>),
         goodDayType:
             GoodDayTypeX.fromString(json['goodDayType'] as String? ?? 'NORMAL'),
+        currentTime: json['currentTime'] != null
+            ? CurrentTime.fromJson(json['currentTime'] as Map<String, dynamic>)
+            : null,
         note: json['note'] as String?,
         goldenHours: (json['goldenHours'] as List<dynamic>?)
                 ?.map((e) =>
                     GoldenHour.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             const [],
+      );
+}
+
+class CurrentTime {
+  CurrentTime({
+    required this.time,
+    required this.timeLabel,
+    required this.canChiHour,
+  });
+
+  final String time;
+  final String timeLabel;
+  final String canChiHour;
+
+  factory CurrentTime.fromJson(Map<String, dynamic> json) => CurrentTime(
+        time: json['time'] as String,
+        timeLabel: json['timeLabel'] as String,
+        canChiHour: json['canChiHour'] as String,
       );
 }
 

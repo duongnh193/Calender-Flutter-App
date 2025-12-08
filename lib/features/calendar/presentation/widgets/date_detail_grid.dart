@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/size_breakpoints.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class DateDetailGrid extends StatelessWidget {
   const DateDetailGrid({
@@ -32,64 +31,48 @@ class DateDetailGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labelStyle = AppTypography.body2(
-      sizeClass,
-    ).copyWith(color: AppColors.textSecondary, letterSpacing: 0.5);
-    final valueStyle = AppTypography.headline2(sizeClass);
-    final subStyle = AppTypography.body2(sizeClass);
+    final labelStyle = AppTypography.dateDetailLabel(sizeClass);
+    final valueStyle = AppTypography.dateDetailValue(sizeClass);
+    final subStyle = AppTypography.dateDetailCanChi(sizeClass);
 
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(AppRadius.large),
-          topRight: Radius.circular(AppRadius.large),
-        ),
-      ),
+    return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.l,
-        vertical: AppSpacing.xl,
+        horizontal: AppSpacing.s,
+        vertical: AppSpacing.m,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _DateColumn(
-                label: 'GIỜ',
-                value: time,
-                subValue: timeCanChi,
-                labelStyle: labelStyle,
-                valueStyle: valueStyle,
-                subStyle: subStyle,
-              ),
-              _DateColumn(
-                label: 'NGÀY',
-                value: day,
-                subValue: dayCanChi,
-                labelStyle: labelStyle,
-                valueStyle: valueStyle.copyWith(color: AppColors.primaryRed),
-                subStyle: subStyle,
-              ),
-              _DateColumn(
-                label: 'THÁNG',
-                value: month,
-                subValue: monthCanChi,
-                labelStyle: labelStyle,
-                valueStyle: valueStyle,
-                subStyle: subStyle,
-              ),
-              _DateColumn(
-                label: 'NĂM',
-                value: year,
-                subValue: yearCanChi,
-                labelStyle: labelStyle,
-                valueStyle: valueStyle,
-                subStyle: subStyle,
-              ),
-            ],
+          _DateColumn(
+            label: 'GIỜ',
+            value: time,
+            subValue: timeCanChi,
+            labelStyle: labelStyle,
+            valueStyle: valueStyle,
+            subStyle: subStyle,
+          ),
+          _DateColumn(
+            label: 'NGÀY',
+            value: day,
+            subValue: dayCanChi,
+            labelStyle: labelStyle,
+            valueStyle: valueStyle.copyWith(color: AppColors.calendarNavArrow),
+            subStyle: subStyle,
+          ),
+          _DateColumn(
+            label: 'THÁNG',
+            value: month,
+            subValue: monthCanChi,
+            labelStyle: labelStyle,
+            valueStyle: valueStyle,
+            subStyle: subStyle,
+          ),
+          _DateColumn(
+            label: 'NĂM',
+            value: year,
+            subValue: yearCanChi,
+            labelStyle: labelStyle,
+            valueStyle: valueStyle,
+            subStyle: subStyle,
           ),
         ],
       ),

@@ -23,20 +23,15 @@ class MainShell extends StatelessWidget {
       builder: (context, constraints) {
         final sizeClass = getSizeClass(constraints.maxWidth);
         return Scaffold(
+          backgroundColor: Colors.transparent,
           body: SafeArea(top: false, bottom: false, child: navigationShell),
           bottomNavigationBar: SafeArea(
             top: false,
-            child: Padding(
-              padding: const EdgeInsets.only(
-                bottom: AppSpacing.s,
-                left: AppSpacing.s,
-                right: AppSpacing.s,
-              ),
-              child: MainBottomNav(
-                currentIndex: navigationShell.currentIndex,
-                onTap: _onTabSelected,
-                sizeClass: sizeClass,
-              ),
+            bottom: true,
+            child: MainBottomNav(
+              currentIndex: navigationShell.currentIndex,
+              onTap: _onTabSelected,
+              sizeClass: sizeClass,
             ),
           ),
         );
