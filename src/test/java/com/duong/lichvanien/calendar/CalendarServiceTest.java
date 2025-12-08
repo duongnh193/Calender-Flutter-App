@@ -1,9 +1,11 @@
 package com.duong.lichvanien.calendar;
 
+import com.duong.lichvanien.calendar.dto.CurrentTimeInfo;
 import com.duong.lichvanien.calendar.dto.DayInfoResponse;
 import com.duong.lichvanien.calendar.entity.DayInfoEntity;
 import com.duong.lichvanien.calendar.repository.DayInfoRepository;
 import com.duong.lichvanien.calendar.service.CalendarService;
+import com.duong.lichvanien.calendar.service.CurrentTimeInfoService;
 import com.duong.lichvanien.common.exception.BadRequestException;
 import com.duong.lichvanien.common.exception.NotFoundException;
 import com.duong.lichvanien.goldenhour.dto.GoldenHourResponse;
@@ -32,6 +34,9 @@ class CalendarServiceTest {
 
     @Mock
     GoldenHourService goldenHourService;
+
+    @Mock
+    CurrentTimeInfoService currentTimeInfoService;
 
     @InjectMocks
     CalendarService calendarService;
@@ -64,6 +69,12 @@ class CalendarServiceTest {
                         .endHour(1)
                         .label("23-1h")
                         .build()));
+        when(currentTimeInfoService.getCurrentTimeInfo(date, "Tân Sửu"))
+                .thenReturn(CurrentTimeInfo.builder()
+                        .time("15:34:00")
+                        .timeLabel("3:34 PM")
+                        .canChiHour("Bính Thân")
+                        .build());
 
         DayInfoResponse resp = calendarService.getDayInfo(date);
 

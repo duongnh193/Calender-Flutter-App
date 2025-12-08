@@ -28,6 +28,7 @@ public class CalendarService {
 
     private final DayInfoRepository dayInfoRepository;
     private final GoldenHourService goldenHourService;
+    private final CurrentTimeInfoService currentTimeInfoService;
 
     @Value("${app.calendar.min-date:1900-01-01}")
     private String minDateStr;
@@ -119,6 +120,10 @@ public class CalendarService {
                 .goodDayType(entity.getGoodDayType())
                 .note(entity.getNote())
                 .goldenHours(goldenHours)
+                .currentTime(currentTimeInfoService.getCurrentTimeInfo(
+                        entity.getSolarDate(),
+                        entity.getCanChiDay()
+                ))
                 .build();
     }
 }

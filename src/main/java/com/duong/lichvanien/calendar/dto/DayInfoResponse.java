@@ -1,7 +1,7 @@
 package com.duong.lichvanien.calendar.dto;
 
-import com.duong.lichvanien.goldenhour.dto.GoldenHourResponse;
 import com.duong.lichvanien.calendar.entity.GoodDayType;
+import com.duong.lichvanien.goldenhour.dto.GoldenHourResponse;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,4 +17,5 @@ public class DayInfoResponse {
     private GoodDayType goodDayType;
     private String note;
     private List<GoldenHourResponse> goldenHours;
+    private CurrentTimeInfo currentTime;
 }

@@ -1,5 +1,6 @@
 package com.duong.lichvanien.calendar;
 
+import com.duong.lichvanien.calendar.service.CurrentTimeInfoService;
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar;
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar.CanChi;
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar.LunarDate;
@@ -44,5 +45,23 @@ class VietnameseLunarCalendarTest {
         LunarDate lunar = VietnameseLunarCalendar.solarToLunar(solar);
         LocalDate back = VietnameseLunarCalendar.lunarToSolar(lunar.getDay(), lunar.getMonth(), lunar.getYear(), lunar.isLeap());
         assertThat(back).isEqualTo(solar);
+    }
+
+    @Test
+    void branch_mapping_should_follow_ranges() {
+        CurrentTimeInfoService svc = new CurrentTimeInfoService();
+        assertThat(svc.branchForHour(java.time.LocalTime.of(23, 30))).isEqualTo("Tý");
+        assertThat(svc.branchForHour(java.time.LocalTime.of(1, 0))).isEqualTo("Sửu");
+        assertThat(svc.branchForHour(java.time.LocalTime.of(15, 0))).isEqualTo("Thân");
+    }
+
+    @Test
+    void stem_for_hour_should_match_known_cases() {
+        CurrentTimeInfoService svc = new CurrentTimeInfoService();
+        // Day stem Tân -> group (Bính/Tân) starting stem for Tý = Mậu
+        String stem = svc.stemForHour("Tân Hợi", "Thân");
+        assertThat(stem).isEqualTo("Bính");
+        // Day stem Ất -> starting stem Bính, Tý => Bính, Sửu => Đinh
+        assertThat(svc.stemForHour("Ất Tỵ", "Sửu")).isEqualTo("Đinh");
     }
 }
