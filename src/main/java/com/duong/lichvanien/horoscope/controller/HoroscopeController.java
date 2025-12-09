@@ -4,13 +4,16 @@ import com.duong.lichvanien.common.response.ErrorResponse;
 import com.duong.lichvanien.horoscope.dto.*;
 import com.duong.lichvanien.horoscope.service.CanChiService;
 import com.duong.lichvanien.horoscope.service.HoroscopeService;
+import com.duong.lichvanien.horoscope.service.LifetimeByBirthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -32,12 +35,13 @@ public class HoroscopeController {
 
     private final HoroscopeService horoscopeService;
     private final CanChiService canChiService;
+    private final LifetimeByBirthService lifetimeByBirthService;
 
     // ==================== LIFETIME HOROSCOPE ====================
 
     @GetMapping("/lifetime")
     @Operation(
-            summary = "Get lifetime horoscope",
+            summary = "Get lifetime horoscope by Can-Chi",
             description = "Returns lifetime horoscope predictions based on Can-Chi combination and gender. " +
                     "Can-Chi should be in format like 'Giáp Tý', 'Ất Sửu', etc."
     )
@@ -67,6 +71,100 @@ public class HoroscopeController {
     ) {
         log.debug("GET /lifetime - canChi={}, gender={}", canChi, gender);
         return horoscopeService.getLifetime(canChi, gender);
+    }
+
+    // ==================== LIFETIME BY BIRTH ====================
+
+    @PostMapping("/lifetime/by-birth")
+    @Operation(
+            summary = "Get lifetime horoscope by birth data",
+            description = """
+                    Computes Can-Chi from birth date, time, and optional lunar calendar info,
+                    then returns the corresponding lifetime horoscope.
+                    
+                    **Hour Branch Mapping (12 Canh):**
+                    - Tý: 23:00 - 00:59
+                    - Sửu: 01:00 - 02:59
+                    - Dần: 03:00 - 04:59
+                    - Mão: 05:00 - 06:59
+                    - Thìn: 07:00 - 08:59
+                    - Tỵ: 09:00 - 10:59
+                    - Ngọ: 11:00 - 12:59
+                    - Mùi: 13:00 - 14:59
+                    - Thân: 15:00 - 16:59
+                    - Dậu: 17:00 - 18:59
+                    - Tuất: 19:00 - 20:59
+                    - Hợi: 21:00 - 22:59
+                    
+                    **Timezone:** All dates/times are interpreted as Asia/Bangkok (UTC+7).
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Lifetime horoscope computed and returned (may be exact match or fallback)",
+                    content = @Content(
+                            schema = @Schema(implementation = LifetimeByBirthResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Exact match",
+                                            summary = "Found exact Can-Chi match in database",
+                                            value = """
+                                                    {
+                                                      "zodiacId": 11,
+                                                      "zodiacCode": "tuat",
+                                                      "zodiacName": "Tuất",
+                                                      "canChi": "Canh Tuất",
+                                                      "gender": "male",
+                                                      "hourBranch": "ti",
+                                                      "hourBranchName": "Tý",
+                                                      "computed": true,
+                                                      "isFallback": false,
+                                                      "overview": "...",
+                                                      "career": "...",
+                                                      "metadata": {"source": "db", "computed": true}
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "Fallback",
+                                            summary = "No exact match, returning zodiac-level default",
+                                            value = """
+                                                    {
+                                                      "zodiacId": 11,
+                                                      "zodiacCode": "tuat",
+                                                      "zodiacName": "Tuất",
+                                                      "canChi": null,
+                                                      "gender": "male",
+                                                      "hourBranch": "ti",
+                                                      "message": "Lifetime data not found for computed Can-Chi; returning zodiac-level default.",
+                                                      "computed": true,
+                                                      "isFallback": true,
+                                                      "overview": "..."
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid input (bad date format, hour/minute out of range, missing gender)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    public LifetimeByBirthResponse getLifetimeByBirth(
+            @Valid @RequestBody LifetimeByBirthRequest request
+    ) {
+        log.info("POST /lifetime/by-birth - date={}, hour={}, minute={}, isLunar={}, gender={}",
+                request.getDate(), request.getHour(), request.getMinute(),
+                request.getIsLunar(), request.getGender());
+        return lifetimeByBirthService.getLifetimeByBirth(request);
     }
 
     // ==================== YEARLY HOROSCOPE ====================

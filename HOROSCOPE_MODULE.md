@@ -416,6 +416,127 @@ curl "http://localhost:8080/api/v1/horoscope/yearly?zodiacId=1&year=2025"
 curl "http://localhost:8080/api/v1/horoscope/can-chi?birthDate=1984-03-15"
 ```
 
+## Lifetime Horoscope by Birth (New Feature)
+
+### POST /api/v1/horoscope/lifetime/by-birth
+
+Computes Can-Chi from birth data and returns the corresponding lifetime horoscope.
+
+**Request Body:**
+```json
+{
+  "date": "1990-02-15",
+  "hour": 23,
+  "minute": 30,
+  "isLunar": false,
+  "isLeapMonth": false,
+  "gender": "male"
+}
+```
+
+**Parameters:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| date | string | Yes | Birth date in ISO format (yyyy-MM-dd) |
+| hour | int | Yes | Birth hour (0-23) |
+| minute | int | No | Birth minute (0-59), defaults to 0 |
+| isLunar | boolean | No | Whether date is lunar calendar, defaults to false |
+| isLeapMonth | boolean | No | Whether it's a leap month (when isLunar=true) |
+| gender | string | Yes | "male" or "female" |
+
+**Response (200 - Exact Match):**
+```json
+{
+  "zodiacId": 11,
+  "zodiacCode": "tuat",
+  "zodiacName": "Tuất",
+  "canChi": "Canh Tuất",
+  "gender": "male",
+  "hourBranch": "ti",
+  "hourBranchName": "Tý",
+  "computed": true,
+  "isFallback": false,
+  "overview": "...",
+  "career": "...",
+  "love": "...",
+  "health": "...",
+  "metadata": {"source": "db", "computed": true}
+}
+```
+
+**Response (200 - Fallback):**
+```json
+{
+  "zodiacId": 11,
+  "zodiacCode": "tuat",
+  "canChi": null,
+  "gender": "male",
+  "message": "Lifetime data not found for computed Can-Chi; returning zodiac-level default.",
+  "computed": true,
+  "isFallback": true,
+  "overview": "..."
+}
+```
+
+### Hour Branch Mapping (12 Canh)
+
+| Branch | Code | Time Range |
+|--------|------|------------|
+| Tý | ti | 23:00 - 00:59 |
+| Sửu | suu | 01:00 - 02:59 |
+| Dần | dan | 03:00 - 04:59 |
+| Mão | mao | 05:00 - 06:59 |
+| Thìn | thin | 07:00 - 08:59 |
+| Tỵ | ty | 09:00 - 10:59 |
+| Ngọ | ngo | 11:00 - 12:59 |
+| Mùi | mui | 13:00 - 14:59 |
+| Thân | than | 15:00 - 16:59 |
+| Dậu | dau | 17:00 - 18:59 |
+| Tuất | tuat | 19:00 - 20:59 |
+| Hợi | hoi | 21:00 - 22:59 |
+
+### Timezone Handling
+
+- All dates/times are interpreted as **Asia/Bangkok (UTC+7)**
+- If `isLunar=true`, the lunar date is converted to solar date using the Vietnamese lunar calendar library
+
+### Sample Curl Commands
+
+```bash
+# Get lifetime horoscope by birth (solar date)
+curl -X POST http://localhost:8080/api/v1/horoscope/lifetime/by-birth \
+  -H "Content-Type: application/json" \
+  -d '{"date":"1990-02-15","hour":23,"minute":30,"isLunar":false,"gender":"male"}'
+
+# Get lifetime horoscope by birth (lunar date)
+curl -X POST http://localhost:8080/api/v1/horoscope/lifetime/by-birth \
+  -H "Content-Type: application/json" \
+  -d '{"date":"1990-01-20","hour":8,"minute":0,"isLunar":true,"isLeapMonth":false,"gender":"female"}'
+```
+
+## Migration Scripts
+
+### Add Indexes for Lifetime Lookup
+
+```bash
+mysql -u root -p lich_van_nien < db/migrations/V2__add_lifetime_indexes.sql
+```
+
+### Backfill User Can-Chi
+
+```bash
+cd db/scripts
+python3 backfill_user_canchi.py --db-host localhost --db-user root --db-name lich_van_nien --dry-run
+python3 backfill_user_canchi.py --db-host localhost --db-user root --db-name lich_van_nien --batch-size 100
+```
+
+### Validate SQL Before Import
+
+```bash
+cd db/scripts
+python3 validate_sql_uniques.py --dir ../generated_horoscope.sql --verbose
+```
+
 ## OpenAPI Documentation
 
 Interactive API documentation is available at:

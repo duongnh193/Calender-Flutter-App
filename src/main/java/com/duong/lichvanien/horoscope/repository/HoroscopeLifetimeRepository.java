@@ -36,5 +36,24 @@ public interface HoroscopeLifetimeRepository extends JpaRepository<HoroscopeLife
         List<HoroscopeLifetimeEntity> results = findAllByNormalizedCanChiAndGender(canChi, gender);
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
+
+    /**
+     * Find first lifetime record by zodiac_id and gender (for fallback).
+     */
+    @Query("SELECT h FROM HoroscopeLifetimeEntity h WHERE " +
+           "h.zodiac.id = :zodiacId AND h.gender = :gender " +
+           "ORDER BY h.id ASC")
+    List<HoroscopeLifetimeEntity> findAllByZodiacIdAndGender(
+            @Param("zodiacId") Long zodiacId,
+            @Param("gender") HoroscopeLifetimeEntity.Gender gender);
+
+    /**
+     * Find first lifetime record by zodiac_id and gender (for fallback).
+     */
+    default Optional<HoroscopeLifetimeEntity> findFirstByZodiacIdAndGender(
+            Long zodiacId, HoroscopeLifetimeEntity.Gender gender) {
+        List<HoroscopeLifetimeEntity> results = findAllByZodiacIdAndGender(zodiacId, gender);
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+    }
 }
 
