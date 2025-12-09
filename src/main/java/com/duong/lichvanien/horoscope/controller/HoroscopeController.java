@@ -1,6 +1,7 @@
 package com.duong.lichvanien.horoscope.controller;
 
 import com.duong.lichvanien.common.response.ErrorResponse;
+import com.duong.lichvanien.common.utils.LogSanitizer;
 import com.duong.lichvanien.horoscope.dto.*;
 import com.duong.lichvanien.horoscope.service.CanChiService;
 import com.duong.lichvanien.horoscope.service.HoroscopeService;
@@ -161,8 +162,9 @@ public class HoroscopeController {
     public LifetimeByBirthResponse getLifetimeByBirth(
             @Valid @RequestBody LifetimeByBirthRequest request
     ) {
+        // Mask DOB in logs to prevent PII leakage
         log.info("POST /lifetime/by-birth - date={}, hour={}, minute={}, isLunar={}, gender={}",
-                request.getDate(), request.getHour(), request.getMinute(),
+                LogSanitizer.maskDate(request.getDate()), request.getHour(), request.getMinute(),
                 request.getIsLunar(), request.getGender());
         return lifetimeByBirthService.getLifetimeByBirth(request);
     }
@@ -310,7 +312,8 @@ public class HoroscopeController {
             @Parameter(description = "Birth date in ISO format (YYYY-MM-DD)", required = true, example = "1990-05-15")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate birthDate
     ) {
-        log.debug("GET /can-chi - birthDate={}", birthDate);
+        // Mask DOB in logs to prevent PII leakage
+        log.debug("GET /can-chi - birthDate={}", LogSanitizer.maskDate(birthDate.toString()));
         return canChiService.calculateFromBirthDate(birthDate);
     }
 }

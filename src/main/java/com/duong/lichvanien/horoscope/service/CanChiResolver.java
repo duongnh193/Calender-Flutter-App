@@ -1,6 +1,7 @@
 package com.duong.lichvanien.horoscope.service;
 
 import com.duong.lichvanien.calendar.util.VietnameseLunarCalendar;
+import com.duong.lichvanien.common.utils.LogSanitizer;
 import com.duong.lichvanien.horoscope.dto.CanChiInfo;
 import com.duong.lichvanien.zodiac.entity.ZodiacEntity;
 import com.duong.lichvanien.zodiac.repository.ZodiacRepository;
@@ -79,8 +80,9 @@ public class CanChiResolver {
      * @return Complete Can-Chi information
      */
     public CanChiInfo resolve(LocalDate date, int hour, int minute, boolean isLunar, boolean isLeapMonth) {
+        // Mask DOB in logs to prevent PII leakage
         log.debug("Resolving Can-Chi for date={}, hour={}, minute={}, isLunar={}, isLeapMonth={}",
-                date, hour, minute, isLunar, isLeapMonth);
+                LogSanitizer.maskDate(date.toString()), hour, minute, isLunar, isLeapMonth);
 
         // Step 1: Convert lunar to solar if needed
         LocalDate solarDate;
@@ -100,7 +102,7 @@ public class CanChiResolver {
                     date.getYear(),
                     isLeapMonth
             );
-            log.debug("Converted lunar {} to solar {}", date, solarDate);
+            log.debug("Converted lunar {} to solar {}", LogSanitizer.maskDate(date.toString()), LogSanitizer.maskDate(solarDate.toString()));
         } else {
             solarDate = date;
             // Convert solar to lunar for reference
