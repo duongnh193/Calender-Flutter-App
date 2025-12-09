@@ -24,7 +24,7 @@ spring:
     open-in-view: false
   jackson:
     time-zone: Asia/Ho_Chi_Minh
-  # Redis configuration
+  # Redis configuration (optional - falls back to simple cache if unavailable)
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -37,7 +37,7 @@ spring:
           max-idle: 8
           min-idle: 2
   cache:
-    type: redis
+    type: ${CACHE_TYPE:simple}
 
 server:
   servlet:

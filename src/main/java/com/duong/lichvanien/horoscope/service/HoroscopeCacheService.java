@@ -4,23 +4,24 @@ import com.duong.lichvanien.common.config.RedisConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
 import java.util.Set;
 
 /**
  * Service for managing horoscope cache operations including invalidation.
+ * Works with both Redis cache and simple in-memory cache.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile("!test")
 public class HoroscopeCacheService {
 
     private final CacheManager cacheManager;
+
+    @Nullable
     private final RedisTemplate<String, Object> redisTemplate;
 
     /**
@@ -71,9 +72,16 @@ public class HoroscopeCacheService {
      */
     public void clearByZodiac(String zodiacCode) {
         log.info("Clearing caches for zodiac: {}", zodiacCode);
-        clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_DAILY + "::" + zodiacCode + "*");
-        clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_MONTHLY + "::" + zodiacCode + "*");
-        clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_YEARLY + "::" + zodiacCode + "*");
+        if (isRedisAvailable()) {
+            clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_DAILY + "::" + zodiacCode + "*");
+            clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_MONTHLY + "::" + zodiacCode + "*");
+            clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_YEARLY + "::" + zodiacCode + "*");
+        } else {
+            // For simple cache, clear all entries as we can't do pattern-based clearing
+            clearDailyCache();
+            clearMonthlyCache();
+            clearYearlyCache();
+        }
     }
 
     /**
@@ -81,9 +89,15 @@ public class HoroscopeCacheService {
      */
     public void clearByZodiacId(Long zodiacId) {
         log.info("Clearing caches for zodiac ID: {}", zodiacId);
-        clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_DAILY + "::" + zodiacId + "*");
-        clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_MONTHLY + "::" + zodiacId + "*");
-        clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_YEARLY + "::" + zodiacId + "*");
+        if (isRedisAvailable()) {
+            clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_DAILY + "::" + zodiacId + "*");
+            clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_MONTHLY + "::" + zodiacId + "*");
+            clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_YEARLY + "::" + zodiacId + "*");
+        } else {
+            clearDailyCache();
+            clearMonthlyCache();
+            clearYearlyCache();
+        }
     }
 
     /**
@@ -91,20 +105,30 @@ public class HoroscopeCacheService {
      */
     public void clearDailyByDateRange(String startDate, String endDate) {
         log.info("Clearing daily caches for date range: {} to {}", startDate, endDate);
-        clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_DAILY + "::*:" + startDate + "*");
-        // Note: For precise date range clearing, a more sophisticated approach would be needed
+        if (isRedisAvailable()) {
+            clearKeysByPattern(RedisConfig.CACHE_HOROSCOPE_DAILY + "::*:" + startDate + "*");
+        } else {
+            clearDailyCache();
+        }
     }
 
     /**
      * Get cache statistics.
      */
     public CacheStats getCacheStats() {
-        long dailyCount = countKeys(RedisConfig.CACHE_HOROSCOPE_DAILY + "::*");
-        long monthlyCount = countKeys(RedisConfig.CACHE_HOROSCOPE_MONTHLY + "::*");
-        long yearlyCount = countKeys(RedisConfig.CACHE_HOROSCOPE_YEARLY + "::*");
-        long lifetimeCount = countKeys(RedisConfig.CACHE_HOROSCOPE_LIFETIME + "::*");
+        if (isRedisAvailable()) {
+            long dailyCount = countKeys(RedisConfig.CACHE_HOROSCOPE_DAILY + "::*");
+            long monthlyCount = countKeys(RedisConfig.CACHE_HOROSCOPE_MONTHLY + "::*");
+            long yearlyCount = countKeys(RedisConfig.CACHE_HOROSCOPE_YEARLY + "::*");
+            long lifetimeCount = countKeys(RedisConfig.CACHE_HOROSCOPE_LIFETIME + "::*");
+            return new CacheStats(dailyCount, monthlyCount, yearlyCount, lifetimeCount);
+        }
+        // For simple cache, we can't easily count entries
+        return new CacheStats(-1, -1, -1, -1);
+    }
 
-        return new CacheStats(dailyCount, monthlyCount, yearlyCount, lifetimeCount);
+    private boolean isRedisAvailable() {
+        return redisTemplate != null;
     }
 
     private void clearCache(String cacheName) {
@@ -116,6 +140,7 @@ public class HoroscopeCacheService {
     }
 
     private void clearKeysByPattern(String pattern) {
+        if (redisTemplate == null) return;
         Set<String> keys = redisTemplate.keys(pattern);
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
@@ -124,6 +149,7 @@ public class HoroscopeCacheService {
     }
 
     private long countKeys(String pattern) {
+        if (redisTemplate == null) return -1;
         Set<String> keys = redisTemplate.keys(pattern);
         return keys != null ? keys.size() : 0;
     }
