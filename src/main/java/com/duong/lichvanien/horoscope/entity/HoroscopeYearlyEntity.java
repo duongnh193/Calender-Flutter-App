@@ -33,11 +33,20 @@ public class HoroscopeYearlyEntity {
     @Column(name = "career", columnDefinition = "TEXT")
     private String career;
 
-    @Column(name = "finance", columnDefinition = "TEXT")
-    private String finance;
+    @Column(name = "fortune", columnDefinition = "TEXT")
+    private String fortune;
 
     @Column(name = "health", columnDefinition = "TEXT")
     private String health;
+
+    @Column(name = "warnings", columnDefinition = "TEXT")
+    private String warnings;
+
+    @Column(name = "metadata", columnDefinition = "JSON")
+    private String metadata;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;

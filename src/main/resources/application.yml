@@ -24,10 +24,40 @@ spring:
     open-in-view: false
   jackson:
     time-zone: Asia/Ho_Chi_Minh
+  # Redis configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+  cache:
+    type: redis
 
 server:
   servlet:
     context-path: /
+
+# Actuator endpoints for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,caches
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
 
 app:
   calendar:
@@ -35,5 +65,12 @@ app:
     max-date: 2100-12-31
     gen-start-year: 1900
     gen-end-year: 2100
+
+# Logging configuration
+logging:
+  level:
+    com.duong.lichvanien.horoscope: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 

@@ -25,8 +25,8 @@ public class HoroscopeDailyEntity {
     @Column(name = "solar_date", nullable = false)
     private LocalDate solarDate;
 
-    @Column(name = "general", columnDefinition = "TEXT")
-    private String general;
+    @Column(name = "summary", columnDefinition = "TEXT")
+    private String summary;
 
     @Column(name = "love", columnDefinition = "TEXT")
     private String love;
@@ -34,17 +34,23 @@ public class HoroscopeDailyEntity {
     @Column(name = "career", columnDefinition = "TEXT")
     private String career;
 
-    @Column(name = "finance", columnDefinition = "TEXT")
-    private String finance;
+    @Column(name = "fortune", columnDefinition = "TEXT")
+    private String fortune;
 
     @Column(name = "health", columnDefinition = "TEXT")
     private String health;
 
-    @Column(name = "lucky_color")
+    @Column(name = "lucky_color", length = 64)
     private String luckyColor;
 
-    @Column(name = "lucky_number")
+    @Column(name = "lucky_number", length = 64)
     private String luckyNumber;
+
+    @Column(name = "metadata", columnDefinition = "JSON")
+    private String metadata;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;

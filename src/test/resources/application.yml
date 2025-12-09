@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: test
   datasource:
     url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
     username: sa
@@ -11,3 +13,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
     show-sql: false
+  cache:
+    type: none
+
+app:
+  calendar:
+    min-date: 1900-01-01
+    max-date: 2100-12-31
+    gen-start-year: 1900
+    gen-end-year: 2100

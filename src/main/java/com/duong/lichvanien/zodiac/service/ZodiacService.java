@@ -28,6 +28,11 @@ public class ZodiacService {
                 .orElseThrow(() -> new NotFoundException("ZODIAC_NOT_FOUND", "Zodiac not found: " + code));
     }
 
+    public ZodiacEntity getById(Long id) {
+        return zodiacRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("ZODIAC_NOT_FOUND", "Zodiac not found with id: " + id));
+    }
+
     public ZodiacShortDto toShortDto(ZodiacEntity entity) {
         return ZodiacShortDto.builder()
                 .code(entity.getCode())
