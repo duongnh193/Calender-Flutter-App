@@ -101,15 +101,15 @@ final canChiProvider =
 
 /// Parameters for daily horoscope query
 class DailyHoroscopeParams {
-  final int? zodiacId;
-  final String? zodiacCode;
-  final DateTime? date;
 
   const DailyHoroscopeParams({
     this.zodiacId,
     this.zodiacCode,
     this.date,
   });
+  final int? zodiacId;
+  final String? zodiacCode;
+  final DateTime? date;
 
   @override
   bool operator ==(Object other) =>
@@ -127,10 +127,6 @@ class DailyHoroscopeParams {
 
 /// Parameters for monthly horoscope query
 class MonthlyHoroscopeParams {
-  final int? zodiacId;
-  final String? zodiacCode;
-  final int year;
-  final int month;
 
   const MonthlyHoroscopeParams({
     this.zodiacId,
@@ -138,6 +134,10 @@ class MonthlyHoroscopeParams {
     required this.year,
     required this.month,
   });
+  final int? zodiacId;
+  final String? zodiacCode;
+  final int year;
+  final int month;
 
   @override
   bool operator ==(Object other) =>
@@ -154,15 +154,15 @@ class MonthlyHoroscopeParams {
 
 /// Parameters for yearly horoscope query
 class YearlyHoroscopeParams {
-  final int? zodiacId;
-  final String? zodiacCode;
-  final int year;
 
   const YearlyHoroscopeParams({
     this.zodiacId,
     this.zodiacCode,
     required this.year,
   });
+  final int? zodiacId;
+  final String? zodiacCode;
+  final int year;
 
   @override
   bool operator ==(Object other) =>
@@ -178,13 +178,13 @@ class YearlyHoroscopeParams {
 
 /// Parameters for lifetime horoscope query
 class LifetimeHoroscopeParams {
-  final String canChi;
-  final String gender;
 
   const LifetimeHoroscopeParams({
     required this.canChi,
     required this.gender,
   });
+  final String canChi;
+  final String gender;
 
   @override
   bool operator ==(Object other) =>
@@ -199,12 +199,6 @@ class LifetimeHoroscopeParams {
 
 /// Parameters for lifetime by birth query
 class LifetimeByBirthParams {
-  final String date;
-  final int hour;
-  final int minute;
-  final bool isLunar;
-  final bool isLeapMonth;
-  final String gender;
 
   const LifetimeByBirthParams({
     required this.date,
@@ -214,6 +208,12 @@ class LifetimeByBirthParams {
     this.isLeapMonth = false,
     required this.gender,
   });
+  final String date;
+  final int hour;
+  final int minute;
+  final bool isLunar;
+  final bool isLeapMonth;
+  final String gender;
 
   @override
   bool operator ==(Object other) =>

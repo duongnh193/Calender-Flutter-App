@@ -78,6 +78,12 @@ class MonthScreen extends ConsumerWidget {
                           subText: subText,
                           onPrevious: () => _shiftMonth(ref, -1),
                           onNext: () => _shiftMonth(ref, 1),
+                          selectedDate: selectedDate,
+                          onDateSelected: (date) {
+                            ref.read(selectedDateProvider.notifier).state = date;
+                            ref.read(focusedMonthProvider.notifier).state =
+                                DateTime(date.year, date.month);
+                          },
                         ),
                         const SizedBox(height: AppSpacing.l),
                         MonthCalendarGrid(

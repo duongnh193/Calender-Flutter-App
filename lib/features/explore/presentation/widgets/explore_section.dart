@@ -11,11 +11,13 @@ class ExploreSection extends StatelessWidget {
     required this.title,
     required this.items,
     required this.sizeClass,
+    this.onItemTap,
   });
 
   final String title;
   final List<ExploreItemModel> items;
   final ScreenSizeClass sizeClass;
+  final void Function(ExploreItemModel item)? onItemTap;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,13 @@ class ExploreSection extends StatelessWidget {
           crossAxisSpacing: AppSpacing.m,
           childAspectRatio: 0.75,
           children: items
-              .map((item) => ExploreItem(item: item, sizeClass: sizeClass))
+              .map(
+                (item) => ExploreItem(
+                  item: item,
+                  sizeClass: sizeClass,
+                  onTap: onItemTap != null ? () => onItemTap!(item) : null,
+                ),
+              )
               .toList(),
         ),
       ],

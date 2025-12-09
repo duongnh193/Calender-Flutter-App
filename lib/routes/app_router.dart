@@ -6,6 +6,7 @@ import '../features/calendar/presentation/screens/daily_screen.dart';
 import '../features/calendar/presentation/screens/month_screen.dart';
 import '../features/culture/presentation/screens/culture_screen.dart';
 import '../features/explore/presentation/screens/explore_screen.dart';
+import '../features/horoscope/presentation/screens/horoscope_screen.dart';
 import '../features/notes/presentation/screens/notes_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -62,6 +63,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      // Horoscope route (outside shell for full-screen experience)
+      GoRoute(
+        path: '/horoscope',
+        name: 'horoscope',
+        builder: (context, state) => const HoroscopeScreen(),
       ),
     ],
   );

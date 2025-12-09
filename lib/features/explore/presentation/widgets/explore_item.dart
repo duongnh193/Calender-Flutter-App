@@ -18,10 +18,16 @@ class ExploreItemModel {
 }
 
 class ExploreItem extends StatelessWidget {
-  const ExploreItem({super.key, required this.item, required this.sizeClass});
+  const ExploreItem({
+    super.key,
+    required this.item,
+    required this.sizeClass,
+    this.onTap,
+  });
 
   final ExploreItemModel item;
   final ScreenSizeClass sizeClass;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -37,42 +43,44 @@ class ExploreItem extends StatelessWidget {
     final lineHeight = (textStyle.fontSize ?? 14) * (textStyle.height ?? 1.2);
     final minHeight = bubbleSize + gap + lineHeight * 2;
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: bubbleSize,
-        minHeight: minHeight,
-        // maxWidth: labelWidth + 12,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: bubbleSize,
+          minHeight: minHeight,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: bubbleSize,
+              height: bubbleSize,
+              decoration: BoxDecoration(
+                color: item.color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                item.icon,
+                color: item.color,
+                size: bubbleSize * 0.55,
+              ),
+            ),
+            SizedBox(height: gap),
+            SizedBox(
+              width: labelWidth,
+              child: Text(
+                item.label,
+                style: textStyle,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: bubbleSize,
-            height: bubbleSize,
-            decoration: BoxDecoration(
-              // ignore: deprecated_member_use
-              color: item.color.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              item.icon,
-              color: item.color,
-              size: bubbleSize * 0.55,
-            ),
-          ),
-          SizedBox(height: gap),
-          SizedBox(
-            width: labelWidth,
-            child: Text(
-              item.label,
-              style: textStyle,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-          ),
     );
   }
 }

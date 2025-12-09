@@ -11,10 +11,14 @@ class DailyHeaderMonthChip extends StatelessWidget {
     super.key,
     required this.sizeClass,
     required this.label,
+    required this.selectedDate,
+    required this.onDateSelected,
   });
 
   final ScreenSizeClass sizeClass;
   final String label;
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -23,27 +27,56 @@ class DailyHeaderMonthChip extends StatelessWidget {
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.l,
-              vertical: AppSpacing.s,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadow.withAlpha((255 * 0.1).round()),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              label,
-              style: AppTypography.body1(
-                sizeClass,
-              ).copyWith(fontWeight: FontWeight.w600),
+          InkWell(
+            onTap: () async {
+              // Ensure we use the root navigator context to get MaterialLocalizations
+              final navigatorContext = Navigator.of(context, rootNavigator: true).context;
+              final date = await showDatePicker(
+                context: navigatorContext,
+                initialDate: selectedDate,
+                firstDate: DateTime(1900),
+                lastDate: DateTime(2100),
+                helpText: 'Chọn ngày',
+              );
+              if (date != null) {
+                onDateSelected(date);
+              }
+            },
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.l,
+                vertical: AppSpacing.s,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.shadow.withAlpha((255 * 0.1).round()),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: AppTypography.body1(
+                      sizeClass,
+                    ).copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
             ),
           ),
           Align(

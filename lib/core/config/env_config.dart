@@ -64,8 +64,8 @@ class EnvConfig {
 
 /// Exception thrown when environment configuration fails
 class EnvConfigException implements Exception {
-  final String message;
   EnvConfigException(this.message);
+  final String message;
 
   @override
   String toString() => 'EnvConfigException: $message';

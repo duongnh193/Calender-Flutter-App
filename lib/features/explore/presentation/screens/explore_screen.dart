@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/size_breakpoints.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -58,12 +59,14 @@ class ExploreScreen extends ConsumerWidget {
                           title: 'Tiện ích',
                           items: _utilitiesItems,
                           sizeClass: sizeClass,
+                          onItemTap: (item) => _handleItemTap(context, item),
                         ),
                         const SizedBox(height: AppSpacing.xl),
                         ExploreSection(
                           title: 'Nội dung khác',
                           items: _contentItems,
                           sizeClass: sizeClass,
+                          onItemTap: (item) => _handleItemTap(context, item),
                         ),
                         const SizedBox(height: AppSpacing.xl),
                         // Center(
@@ -88,6 +91,13 @@ class ExploreScreen extends ConsumerWidget {
         );
       },
     );
+  }
+
+  void _handleItemTap(BuildContext context, ExploreItemModel item) {
+    if (item.label == 'Tử vi bói toán') {
+      context.push('/horoscope');
+    }
+    // Handle other items here
   }
 }
 

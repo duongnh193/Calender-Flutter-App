@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,15 +17,58 @@ import '../widgets/daily_quote_section.dart';
 import '../widgets/daily_weather_row.dart';
 import '../widgets/date_detail_grid.dart';
 
-class DailyScreen extends ConsumerWidget {
+class DailyScreen extends ConsumerStatefulWidget {
   const DailyScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DailyScreen> createState() => _DailyScreenState();
+}
+
+class _DailyScreenState extends ConsumerState<DailyScreen> {
+  Timer? _autoRefreshTimer;
+  DateTime? _previousDate;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start auto-refresh timer (every 30 seconds)
+    _startAutoRefresh();
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startAutoRefresh() {
+    // Auto-refresh data every 30 seconds to ensure real-time display
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        final selectedDate = ref.read(selectedDateProvider);
+        ref.invalidate(dayInfoProvider(selectedDate));
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedDate = ref.watch(selectedDateProvider);
+    
+    // Auto-refresh when date changes
+    if (_previousDate != null && _previousDate != selectedDate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.invalidate(dayInfoProvider(selectedDate));
+        }
+      });
+    }
+    _previousDate = selectedDate;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final sizeClass = getSizeClass(constraints.maxWidth);
-        final selectedDate = ref.watch(selectedDateProvider);
         final asyncDay = ref.watch(dayInfoProvider(selectedDate));
 
         final monthLabel =
@@ -55,6 +100,7 @@ class DailyScreen extends ConsumerWidget {
                 child: asyncDay.when(
                   loading: () => _buildContent(
                     context,
+                    ref: ref,
                     sizeClass: sizeClass,
                     selectedDate: selectedDate,
                     monthLabel: monthLabel,
@@ -70,6 +116,7 @@ class DailyScreen extends ConsumerWidget {
                   ),
                   data: (dayInfo) => _buildContent(
                     context,
+                    ref: ref,
                     sizeClass: sizeClass,
                     selectedDate: selectedDate,
                     monthLabel: monthLabel,
@@ -86,8 +133,33 @@ class DailyScreen extends ConsumerWidget {
     );
   }
 
+  void _goToNextDay(WidgetRef ref, DateTime currentDate) {
+    final nextDate = currentDate.add(const Duration(days: 1));
+    // Validate date range (1900-2100)
+    final minDate = DateTime(1900);
+    final maxDate = DateTime(2100, 12, 31);
+    if (!nextDate.isBefore(minDate) && !nextDate.isAfter(maxDate)) {
+      ref.read(selectedDateProvider.notifier).state = nextDate;
+      // Auto-refresh data for new date
+      ref.invalidate(dayInfoProvider(nextDate));
+    }
+  }
+
+  void _goToPreviousDay(WidgetRef ref, DateTime currentDate) {
+    final previousDate = currentDate.subtract(const Duration(days: 1));
+    // Validate date range (1900-2100)
+    final minDate = DateTime(1900);
+    final maxDate = DateTime(2100, 12, 31);
+    if (!previousDate.isBefore(minDate) && !previousDate.isAfter(maxDate)) {
+      ref.read(selectedDateProvider.notifier).state = previousDate;
+      // Auto-refresh data for new date
+      ref.invalidate(dayInfoProvider(previousDate));
+    }
+  }
+
   Widget _buildContent(
     BuildContext context, {
+    required WidgetRef ref,
     required ScreenSizeClass sizeClass,
     required DateTime selectedDate,
     required String monthLabel,
@@ -111,92 +183,110 @@ class DailyScreen extends ConsumerWidget {
     final currentTimeLabel = dayInfo?.currentTime?.timeLabel ?? '--';
     final canChiHourLabel = dayInfo?.currentTime?.canChiHour ?? '--';
 
-    return CustomScrollView(
-      slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: horizontalPadding,
-              right: horizontalPadding,
-              top: AppSpacing.m,
-              bottom: AppSpacing.m,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // CHIP THÁNG
-                DailyHeaderMonthChip(
-                  sizeClass: sizeClass,
-                  label: monthLabel,
-                ),
-
-                // SỐ NGÀY
-                Text(
-                  '${selectedDate.day}',
-                  style: AppTypography.displayNumber(sizeClass)
-                      .copyWith(color: AppColors.accentBlue),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.l),
-
-                // THỨ
-                Text(
-                  weekdayLabel,
-                  style: AppTypography.headline2(sizeClass),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.xxl),
-
-                // QUOTE
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m),
-                  child: DailyQuoteSection(
+    return GestureDetector(
+      onVerticalDragEnd: (details) {
+        // Swipe up (negative velocity) = next day
+        // Swipe down (positive velocity) = previous day
+        if (details.primaryVelocity != null) {
+          if (details.primaryVelocity! < -500) {
+            _goToNextDay(ref, selectedDate);
+          } else if (details.primaryVelocity! > 500) {
+            _goToPreviousDay(ref, selectedDate);
+          }
+        }
+      },
+      child: CustomScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: horizontalPadding,
+                right: horizontalPadding,
+                top: AppSpacing.m,
+                bottom: AppSpacing.m,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // CHIP THÁNG
+                  DailyHeaderMonthChip(
                     sizeClass: sizeClass,
-                    quote: _getQuoteForDate(selectedDate),
-                    source: 'Kinh dịch',
+                    label: monthLabel,
+                    selectedDate: selectedDate,
+                    onDateSelected: (date) {
+                      ref.read(selectedDateProvider.notifier).state = date;
+                    },
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
 
-                // WEATHER - TODO: Connect to weather API
-                DailyWeatherRow(
-                  sizeClass: sizeClass,
-                  location: 'Hà Nội |',
-                  temperature: '-- °C',
-                ),
+                  // SỐ NGÀY
+                  Text(
+                    '${selectedDate.day}',
+                    style: AppTypography.displayNumber(sizeClass)
+                        .copyWith(color: AppColors.accentBlue),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.l),
 
-                const Spacer(),
+                  // THỨ
+                  Text(
+                    weekdayLabel,
+                    style: AppTypography.headline2(sizeClass),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
 
-                // Loading indicator overlay
-                if (isLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.m),
-                    child: SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                  // QUOTE
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m),
+                    child: DailyQuoteSection(
+                      sizeClass: sizeClass,
+                      quote: _getQuoteForDate(selectedDate),
+                      source: 'Kinh dịch',
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.xl),
 
-                // GRID GIỜ / NGÀY / THÁNG / NĂM
-                DateDetailGrid(
-                  sizeClass: sizeClass,
-                  time: currentTimeLabel,
-                  day: lunarDayLabel,
-                  month: lunarMonthLabel,
-                  year: lunarYearLabel,
-                  timeCanChi: canChiHourLabel,
-                  dayCanChi: canChiDayLabel,
-                  monthCanChi: canChiMonthLabel,
-                  yearCanChi: canChiYearLabel,
-                ),
-              ],
+                  // WEATHER - TODO: Connect to weather API
+                  DailyWeatherRow(
+                    sizeClass: sizeClass,
+                    location: 'Hà Nội |',
+                    temperature: '-- °C',
+                  ),
+
+                  const Spacer(),
+
+                  // Loading indicator overlay
+                  if (isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: AppSpacing.m),
+                      child: SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+
+                  // GRID GIỜ / NGÀY / THÁNG / NĂM
+                  DateDetailGrid(
+                    sizeClass: sizeClass,
+                    time: currentTimeLabel,
+                    day: lunarDayLabel,
+                    month: lunarMonthLabel,
+                    year: lunarYearLabel,
+                    timeCanChi: canChiHourLabel,
+                    dayCanChi: canChiDayLabel,
+                    monthCanChi: canChiMonthLabel,
+                    yearCanChi: canChiYearLabel,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

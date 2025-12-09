@@ -14,6 +14,8 @@ class MonthHeader extends StatelessWidget {
     required this.subText,
     required this.onPrevious,
     required this.onNext,
+    required this.selectedDate,
+    required this.onDateSelected,
   });
 
   final ScreenSizeClass sizeClass;
@@ -22,6 +24,8 @@ class MonthHeader extends StatelessWidget {
   final String subText;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -44,22 +48,38 @@ class MonthHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: Text(
-                      primaryText,
-                      style: titleStyle,
-                      overflow: TextOverflow.ellipsis,
+              InkWell(
+                onTap: () async {
+                  // Ensure we use the root navigator context to get MaterialLocalizations
+                  final navigatorContext = Navigator.of(context, rootNavigator: true).context;
+                  final date = await showDatePicker(
+                    context: navigatorContext,
+                    initialDate: selectedDate,
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime(2100),
+                    helpText: 'Chọn ngày',
+                  );
+                  if (date != null) {
+                    onDateSelected(date);
+                  }
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        primaryText,
+                        style: titleStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  const Icon(
-                    Icons.arrow_drop_down,
-                    color: AppColors.calendarNavArrow,
-                  ),
-                ],
+                    const SizedBox(width: AppSpacing.xs),
+                    const Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.calendarNavArrow,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: AppSpacing.xs / 2),
               Text(
