@@ -7,6 +7,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/zodiac_utils.dart';
 import '../../../../core/di/providers.dart';
 import '../../application/calendar_providers.dart';
 import '../../domain/day_info.dart';
@@ -133,7 +134,7 @@ class MonthScreen extends ConsumerWidget {
                           items: _mapGoldenHours(goldenHours),
                         ),
                         const SizedBox(height: AppSpacing.l),
-                        _AdPlaceholder(sizeClass: sizeClass),
+                        // _AdPlaceholder(sizeClass: sizeClass),
                       ],
                     ),
                   ),
@@ -202,7 +203,7 @@ List<GoldenHourItem> _mapGoldenHours(List<GoldenHour> items) {
           name: _branchLabel(gh.branch) ?? gh.branch,
           timeRange: gh.label,
           color: _colorForBranch(gh.branch),
-          icon: _iconForBranch(gh.branch),
+          zodiacImagePath: ZodiacUtils.getZodiacImagePath(gh.branch),
         ),
       )
       .toList();
@@ -245,22 +246,6 @@ Color _colorForBranch(String code) {
   }
 }
 
-IconData _iconForBranch(String code) {
-  switch (code.toLowerCase()) {
-    case 'ti':
-      return Icons.cruelty_free;
-    case 'suu':
-      return Icons.pets;
-    case 'ty':
-      return Icons.grass;
-    case 'ngo':
-      return Icons.bolt;
-    case 'than':
-      return Icons.emoji_nature;
-    default:
-      return Icons.star_rate_rounded;
-  }
-}
 
 class _AdPlaceholder extends StatelessWidget {
   const _AdPlaceholder({required this.sizeClass});

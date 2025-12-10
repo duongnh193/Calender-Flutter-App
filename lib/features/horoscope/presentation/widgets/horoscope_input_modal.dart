@@ -360,39 +360,55 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
         },
       ),
       const SizedBox(height: AppSpacing.m),
-      // Zodiac selector (simplified - you can enhance this)
+      // Zodiac selector - accepts either code (ti, suu, dan...) OR ID (1-12)
       TextFormField(
         key: const ValueKey('yearly_zodiac'),
         controller: _zodiacCodeController,
         decoration: InputDecoration(
-          labelText: 'Mã cung hoàng đạo (ti, suu, dan, ...) *',
-          hintText: 'hoặc nhập ID (1-12)',
+          labelText: 'Cung hoàng đạo *',
+          hintText: 'Nhập mã (ti, suu, dan...) hoặc ID (1-12)',
+          helperText: 'Chỉ cần nhập MÃ hoặc ID, không cần cả hai',
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Vui lòng nhập mã cung hoàng đạo hoặc ID';
+            return 'Vui lòng nhập mã cung hoàng đạo (ti, suu, dan...) hoặc ID (1-12)';
           }
           return _validateZodiacCode(value);
         },
         onChanged: (value) {
-          final id = int.tryParse(value);
+          final trimmedValue = value.trim();
+          
+          // Try to parse as ID first (1-12)
+          final id = int.tryParse(trimmedValue);
           if (id != null && id >= 1 && id <= 12) {
+            // User entered a valid ID
             setState(() {
               _selectedZodiacId = id;
-              _selectedZodiacCode = null;
+              _selectedZodiacCode = null; // Clear code when ID is set
             });
             _formKey.currentState?.validate();
-          } else if (value.isNotEmpty) {
-            final normalizedCode = value.toLowerCase().trim();
-            setState(() {
-              _selectedZodiacCode = normalizedCode;
-              _selectedZodiacId = null;
-            });
-            _formKey.currentState?.validate();
+          } else if (trimmedValue.isNotEmpty) {
+            // User entered text - treat as zodiac code
+            final normalizedCode = trimmedValue.toLowerCase();
+            // Only set code if it's a valid zodiac code
+            if (_validZodiacCodes.contains(normalizedCode)) {
+              setState(() {
+                _selectedZodiacCode = normalizedCode;
+                _selectedZodiacId = null; // Clear ID when code is set
+              });
+              _formKey.currentState?.validate();
+            } else {
+              // Invalid code - clear both but don't validate yet (let validator show error)
+              setState(() {
+                _selectedZodiacCode = null;
+                _selectedZodiacId = null;
+              });
+            }
           } else {
+            // Empty input - clear both
             setState(() {
               _selectedZodiacCode = null;
               _selectedZodiacId = null;
@@ -470,39 +486,55 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
         },
       ),
       const SizedBox(height: AppSpacing.m),
-      // Zodiac selector
+      // Zodiac selector - accepts either code (ti, suu, dan...) OR ID (1-12)
       TextFormField(
         key: const ValueKey('daily_zodiac'),
         controller: _dailyZodiacCodeController,
         decoration: InputDecoration(
-          labelText: 'Mã cung hoàng đạo (ti, suu, dan, ...) *',
-          hintText: 'hoặc nhập ID (1-12)',
+          labelText: 'Cung hoàng đạo *',
+          hintText: 'Nhập mã (ti, suu, dan...) hoặc ID (1-12)',
+          helperText: 'Chỉ cần nhập MÃ hoặc ID, không cần cả hai',
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Vui lòng nhập mã cung hoàng đạo hoặc ID';
+            return 'Vui lòng nhập mã cung hoàng đạo (ti, suu, dan...) hoặc ID (1-12)';
           }
           return _validateZodiacCode(value);
         },
         onChanged: (value) {
-          final id = int.tryParse(value);
+          final trimmedValue = value.trim();
+          
+          // Try to parse as ID first (1-12)
+          final id = int.tryParse(trimmedValue);
           if (id != null && id >= 1 && id <= 12) {
+            // User entered a valid ID
             setState(() {
               _selectedZodiacId = id;
-              _selectedZodiacCode = null;
+              _selectedZodiacCode = null; // Clear code when ID is set
             });
             _formKey.currentState?.validate();
-          } else if (value.isNotEmpty) {
-            final normalizedCode = value.toLowerCase().trim();
-            setState(() {
-              _selectedZodiacCode = normalizedCode;
-              _selectedZodiacId = null;
-            });
-            _formKey.currentState?.validate();
+          } else if (trimmedValue.isNotEmpty) {
+            // User entered text - treat as zodiac code
+            final normalizedCode = trimmedValue.toLowerCase();
+            // Only set code if it's a valid zodiac code
+            if (_validZodiacCodes.contains(normalizedCode)) {
+              setState(() {
+                _selectedZodiacCode = normalizedCode;
+                _selectedZodiacId = null; // Clear ID when code is set
+              });
+              _formKey.currentState?.validate();
+            } else {
+              // Invalid code - clear both but don't validate yet (let validator show error)
+              setState(() {
+                _selectedZodiacCode = null;
+                _selectedZodiacId = null;
+              });
+            }
           } else {
+            // Empty input - clear both
             setState(() {
               _selectedZodiacCode = null;
               _selectedZodiacId = null;
@@ -519,6 +551,17 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
     // Validate form - this will show inline errors
     if (!_formKey.currentState!.validate()) {
       return; // Stop here, errors are shown inline
+    }
+
+    // Additional validation: Ensure at least one zodiac identifier is provided
+    // (This should already be validated by the form field, but double-check)
+    if (widget.type == HoroscopeType.yearly || 
+        widget.type == HoroscopeType.monthly || 
+        widget.type == HoroscopeType.daily) {
+      if (_selectedZodiacId == null && _selectedZodiacCode == null) {
+        // This should not happen if form validation passed, but add safety check
+        return;
+      }
     }
 
     // Additional validation for year range
@@ -545,7 +588,7 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
               );
           break;
         case HoroscopeType.yearly:
-          // Zodiac is already validated by form validator
+          // Only pass the zodiac identifier that was actually provided (either ID or code, not both)
           ref.read(yearlyHoroscopeInputProvider.notifier).setInput(
                 zodiacId: _selectedZodiacId,
                 zodiacCode: _selectedZodiacCode,
@@ -553,7 +596,7 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
               );
           break;
         case HoroscopeType.monthly:
-          // Zodiac is already validated by form validator
+          // Only pass the zodiac identifier that was actually provided (either ID or code, not both)
           ref.read(monthlyHoroscopeInputProvider.notifier).setInput(
               zodiacId: _selectedZodiacId,
               zodiacCode: _selectedZodiacCode,
@@ -562,7 +605,7 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
             );
           break;
         case HoroscopeType.daily:
-          // Date and zodiac are already validated by form validators
+          // Only pass the zodiac identifier that was actually provided (either ID or code, not both)
           ref.read(dailyHoroscopeInputProvider.notifier).setInput(
                 zodiacId: _selectedZodiacId,
                 zodiacCode: _selectedZodiacCode,

@@ -15,8 +15,8 @@ class ZodiacInfo {
   });
 
   factory ZodiacInfo.fromJson(Map<String, dynamic> json) => ZodiacInfo(
-        id: json['id'] as int? ?? json['zodiacId'] as int,
-        code: json['code'] as String? ?? json['zodiacCode'] as String,
+        id: json['id'] as int? ?? json['zodiacId'] as int? ?? 0,
+        code: json['code'] as String? ?? json['zodiacCode'] as String? ?? '',
         nameVi: json['nameVi'] as String? ?? json['zodiacName'] as String? ?? '',
         nameEn: json['nameEn'] as String?,
         description: json['description'] as String?,
@@ -51,7 +51,9 @@ class HoroscopeDaily {
           code: json['zodiacCode'] as String? ?? '',
           nameVi: json['zodiacName'] as String? ?? '',
         ),
-        solarDate: DateTime.parse(json['solarDate'] as String),
+        solarDate: json['solarDate'] != null 
+            ? DateTime.parse(json['solarDate'] as String)
+            : DateTime.now(),
         summary: json['summary'] as String? ?? '',
         career: json['career'] as String? ?? '',
         love: json['love'] as String? ?? '',
@@ -92,8 +94,8 @@ class HoroscopeMonthly {
           code: json['zodiacCode'] as String? ?? '',
           nameVi: json['zodiacName'] as String? ?? '',
         ),
-        year: json['year'] as int,
-        month: json['month'] as int,
+        year: json['year'] as int? ?? DateTime.now().year,
+        month: json['month'] as int? ?? DateTime.now().month,
         summary: json['summary'] as String? ?? '',
         career: json['career'] as String? ?? '',
         love: json['love'] as String? ?? '',
@@ -131,7 +133,7 @@ class HoroscopeYearly {
           code: json['zodiacCode'] as String? ?? '',
           nameVi: json['zodiacName'] as String? ?? '',
         ),
-        year: json['year'] as int,
+        year: json['year'] as int? ?? DateTime.now().year,
         summary: json['summary'] as String? ?? '',
         career: json['career'] as String? ?? '',
         love: json['love'] as String? ?? '',
@@ -179,7 +181,7 @@ class HoroscopeLifetime {
           nameVi: json['zodiacName'] as String? ?? '',
         ),
         canChi: json['canChi'] as String? ?? '',
-        gender: json['gender'] as String,
+        gender: json['gender'] as String? ?? 'male',
         overview: json['overview'] as String? ?? '',
         career: json['career'] as String? ?? '',
         love: json['love'] as String? ?? '',
@@ -242,7 +244,7 @@ class LifetimeByBirthResponse {
         zodiacCode: json['zodiacCode'] as String?,
         zodiacName: json['zodiacName'] as String?,
         canChi: json['canChi'] as String?,
-        gender: json['gender'] as String,
+        gender: json['gender'] as String? ?? 'male',
         hourBranch: json['hourBranch'] as String?,
         hourBranchName: json['hourBranchName'] as String?,
         message: json['message'] as String?,
@@ -292,9 +294,9 @@ class CanChiResult {
   });
 
   factory CanChiResult.fromJson(Map<String, dynamic> json) => CanChiResult(
-        canYear: json['canYear'] as String,
-        chiYear: json['chiYear'] as String,
-        canChiYear: json['canChiYear'] as String,
+        canYear: json['canYear'] as String? ?? '',
+        chiYear: json['chiYear'] as String? ?? '',
+        canChiYear: json['canChiYear'] as String? ?? '',
         zodiacId: json['zodiacId'] as int?,
         zodiacCode: json['zodiacCode'] as String?,
         canDay: json['canDay'] as String?,

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/zodiac_utils.dart';
 import '../../domain/horoscope_models.dart';
 import '../screens/horoscope_screen.dart';
 import '../providers/horoscope_providers.dart';
@@ -66,7 +67,19 @@ class HoroscopeResultView extends ConsumerWidget {
             'Vui lòng nhập thông tin để xem tử vi',
           );
         }
-        return _buildLifetimeContent(result);
+        // Extract year from birth date input
+        int? birthYear;
+        if (input.date != null) {
+          try {
+            final dateParts = input.date!.split('-');
+            if (dateParts.isNotEmpty) {
+              birthYear = int.tryParse(dateParts[0]);
+            }
+          } catch (_) {
+            // Ignore parsing errors
+          }
+        }
+        return _buildLifetimeContent(result, birthYear);
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => _buildErrorState(error),
@@ -237,7 +250,7 @@ class HoroscopeResultView extends ConsumerWidget {
     );
   }
 
-  Widget _buildLifetimeContent(LifetimeByBirthResponse result) {
+  Widget _buildLifetimeContent(LifetimeByBirthResponse result, int? birthYear) {
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPaddingFor(sizeClass),
@@ -253,6 +266,7 @@ class HoroscopeResultView extends ConsumerWidget {
             canChi: result.canChi,
             gender: result.gender,
             hourBranch: result.hourBranchName,
+            year: birthYear,
           ),
           const SizedBox(height: AppSpacing.xl),
           // Overview section
@@ -516,6 +530,7 @@ class HoroscopeResultView extends ConsumerWidget {
     DateTime? date,
   }) {
     return Container(
+      alignment: Alignment.center,
       padding: const EdgeInsets.all(AppSpacing.l),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -524,19 +539,41 @@ class HoroscopeResultView extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // Zodiac icon placeholder
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.primaryRed.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _getZodiacIcon(zodiacCode),
-              size: 40,
-              color: AppColors.primaryRed,
-            ),
+          // Zodiac image
+          Builder(
+            builder: (context) {
+              final imagePath = ZodiacUtils.getZodiacImagePath(zodiacCode);
+              return Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryRed.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: imagePath != null
+                    ? ClipOval(
+                        child: Image.asset(
+                          imagePath,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to icon if image fails to load
+                            return Icon(
+                              Icons.star,
+                              size: 40,
+                              color: AppColors.primaryRed,
+                            );
+                          },
+                        ),
+                      )
+                    : Icon(
+                        Icons.star,
+                        size: 40,
+                        color: AppColors.primaryRed,
+                      ),
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.m),
           // Title
@@ -550,7 +587,7 @@ class HoroscopeResultView extends ConsumerWidget {
           if (canChi != null && gender != null) ...[
             const SizedBox(height: AppSpacing.s),
             Text(
-              '${canChi.toUpperCase()} - ${gender.toUpperCase()}',
+              '${canChi.toUpperCase()}',
               style: AppTypography.body1(sizeClass).copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -578,7 +615,8 @@ class HoroscopeResultView extends ConsumerWidget {
     DateTime? date,
   ) {
     if (canChi != null && gender != null) {
-      return 'Tử vi tuổi $canChi ${gender == "male" ? "nam" : "nữ"} mạng';
+      final yearText = year != null ? ' năm $year' : '';
+      return 'Tử vi tuổi $canChi$yearText ${gender == "male" ? "nam" : "nữ"} mạng';
     }
     if (year != null && month != null) {
       return 'Tử vi năm $year tháng $month';
@@ -590,38 +628,6 @@ class HoroscopeResultView extends ConsumerWidget {
       return 'Tử vi ngày ${date.day}/${date.month}/${date.year}';
     }
     return 'Tử vi';
-  }
-
-  IconData _getZodiacIcon(String code) {
-    // Map zodiac codes to icons
-    switch (code.toLowerCase()) {
-      case 'ti':
-        return Icons.mouse;
-      case 'suu':
-        return Icons.agriculture;
-      case 'dan':
-        return Icons.pets;
-      case 'mao':
-        return Icons.cruelty_free;
-      case 'thin':
-        return Icons.water_drop;
-      case 'ty':
-        return Icons.grass;
-      case 'ngo':
-        return Icons.bolt;
-      case 'mui':
-        return Icons.emoji_nature;
-      case 'than':
-        return Icons.forest;
-      case 'dau':
-        return Icons.pets;
-      case 'tuat':
-        return Icons.pets;
-      case 'hoi':
-        return Icons.water_drop;
-      default:
-        return Icons.star;
-    }
   }
 }
 

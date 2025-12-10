@@ -46,15 +46,54 @@ class MonthGoldenHoursSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.m),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: AppSpacing.xl,
-            runSpacing: AppSpacing.m,
-            children: items
-                .map(
-                  (item) => _GoldenHourItem(item: item, sizeClass: sizeClass),
-                )
-                .toList(),
+          // Display in 2 rows, 3 columns each (6 items max)
+          Column(
+            children: [
+              // First row (first 3 items)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: items
+                    .take(3)
+                    .map(
+                      (item) => Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                          ),
+                          child: _GoldenHourItem(
+                            item: item,
+                            sizeClass: sizeClass,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+              if (items.length > 3) ...[
+                const SizedBox(height: AppSpacing.l),
+                // Second row (items 4-6)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: items
+                      .skip(3)
+                      .take(3)
+                      .map(
+                        (item) => Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.xs,
+                            ),
+                            child: _GoldenHourItem(
+                              item: item,
+                              sizeClass: sizeClass,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ],
           ),
         ],
       ),
@@ -67,13 +106,13 @@ class GoldenHourItem {
     required this.name,
     required this.timeRange,
     required this.color,
-    required this.icon,
+    required this.zodiacImagePath,
   });
 
   final String name;
   final String timeRange;
   final Color color;
-  final IconData icon;
+  final String? zodiacImagePath; // Path to zodiac PNG image
 }
 
 class _GoldenHourItem extends StatelessWidget {
@@ -94,7 +133,23 @@ class _GoldenHourItem extends StatelessWidget {
             color: item.color.withAlpha((255 * 0.18).round()),
             shape: BoxShape.circle,
           ),
-          child: Icon(item.icon, color: item.color, size: 26),
+          child: item.zodiacImagePath != null
+              ? ClipOval(
+                  child: Image.asset(
+                    item.zodiacImagePath!,
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to colored circle if image fails to load
+                      return Container(
+                        color: item.color.withAlpha((255 * 0.3).round()),
+                        child: Icon(Icons.star, color: item.color, size: 26),
+                      );
+                    },
+                  ),
+                )
+              : Icon(Icons.star, color: item.color, size: 26),
         ),
         const SizedBox(height: AppSpacing.s),
         Text(
