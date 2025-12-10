@@ -30,7 +30,7 @@ INSERT INTO zodiac (code, name_vi, order_no) VALUES
                                                  ('hoi',  'Hợi',  12);
 
 -- ============================================
--- 2) ZODIAC_HOUR (dùng code ASCII làm key)
+-- 2) ZODIAC_HOUR 
 -- ============================================
 
 TRUNCATE TABLE zodiac_hour;
@@ -51,16 +51,13 @@ INSERT INTO zodiac_hour (branch_code, start_hour, end_hour) VALUES
 
 -- ============================================
 -- 3) GOLDEN_HOUR_PATTERN
---    Dùng code ASCII thay vì chữ Việt làm key
 -- ============================================
 
 TRUNCATE TABLE golden_hour_pattern;
 
 /*
-  Mapping tham khảo:
   - day_branch_code = code con giáp của NGÀY (ti, suu, dan,...)
   - good_branch_codes = CSV code con giáp GIỜ hoàng đạo
-  (ở đây tao giữ pattern tương tự trước, chỉ chuyển sang code)
 */
 
 INSERT INTO golden_hour_pattern (day_branch_code, good_branch_codes) VALUES
@@ -83,7 +80,6 @@ INSERT INTO golden_hour_pattern (day_branch_code, good_branch_codes) VALUES
 
 TRUNCATE TABLE horoscope_yearly;
 
-/* MySQL dùng CONCAT, không phải || */
 INSERT INTO horoscope_yearly
 (zodiac_id, year, summary, love, career, finance, health)
 SELECT
@@ -100,7 +96,6 @@ FROM zodiac;
 -- 5) TEMPLATE TỬ VI NGÀY (OPTIONAL)
 -- ============================================
 
--- Ví dụ 1 bản ghi mẫu cho tuổi Tý ngày 2025-01-01:
 
 INSERT INTO horoscope_daily
 (zodiac_id, solar_date, general, love, career, finance, health, lucky_color, lucky_number)
