@@ -56,7 +56,7 @@ class _TuViChartScreenState extends ConsumerState<TuViChartScreen> {
         minute: int.tryParse(_minuteController.text) ?? 0,
         gender: _selectedGender,
         isLunar: _isLunar,
-        name: _nameController.text.trim().isEmpty ? null : _nameController.text.trim(),
+        name: _nameController.text.trim(),
       );
 
       final result = await repository.generateChart(request);
@@ -116,14 +116,23 @@ class _TuViChartScreenState extends ConsumerState<TuViChartScreen> {
             ),
             const SizedBox(height: AppSpacing.m),
 
-            // Name input (optional)
+            // Name input (required)
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Họ và Tên',
-                hintText: 'Nhập tên người dùng',
+                labelText: 'Họ và Tên *',
+                hintText: 'Nhập họ và tên đầy đủ',
                 prefixIcon: Icon(Icons.person_outline),
               ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Vui lòng nhập họ và tên';
+                }
+                if (value.trim().length < 2) {
+                  return 'Họ và tên phải có ít nhất 2 ký tự';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: AppSpacing.s),
 
