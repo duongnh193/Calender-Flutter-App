@@ -22,6 +22,16 @@ CREATE TABLE horoscope_lifetime (
                                     unlucky    TEXT,    -- hạn, việc cần tránh
                                     advice     TEXT,    -- lời khuyên / hành động
 
+                                    -- Additional fields for structured content (V4)
+                                    love_by_month_group1 TEXT NULL COMMENT 'Tình duyên nhóm 1 (tháng 5,6,9)',
+                                    love_by_month_group2 TEXT NULL COMMENT 'Tình duyên nhóm 2 (tháng 1,2,7,10,11,12)',
+                                    love_by_month_group3 TEXT NULL COMMENT 'Tình duyên nhóm 3 (tháng 3,4,8)',
+                                    compatible_ages TEXT NULL COMMENT 'Tuổi hợp làm ăn (JSON array)',
+                                    difficult_years TEXT NULL COMMENT 'Năm khó khăn (JSON array)',
+                                    incompatible_ages TEXT NULL COMMENT 'Tuổi đại kỵ (JSON array)',
+                                    yearly_progression TEXT NULL COMMENT 'Diễn biến từng năm (JSON object)',
+                                    ritual_guidance TEXT NULL COMMENT 'Hướng dẫn nghi lễ cúng sao',
+
                                     metadata JSON DEFAULT NULL,                -- trường mở rộng (tags, nguồn, note)
                                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -51,6 +61,18 @@ CREATE TABLE horoscope_yearly (
                                   health TEXT,
                                   fortune TEXT,
                                   warnings TEXT,     -- hạn, kỵ cần chú ý trong năm
+
+                                  -- Additional fields for structured content (V4)
+                                  cung_menh TEXT NULL COMMENT 'Cung Mệnh với sao và giải thích',
+                                  cung_xung_chieu TEXT NULL COMMENT 'Cung Xung Chiếu',
+                                  cung_tam_hop TEXT NULL COMMENT 'Cung Tam Hợp',
+                                  cung_nhi_hop TEXT NULL COMMENT 'Cung Nhị Hợp',
+                                  van_han TEXT NULL COMMENT 'Vận hạn chi tiết (JSON)',
+                                  tu_tru TEXT NULL COMMENT 'Tứ trụ (JSON)',
+                                  phong_thuy TEXT NULL COMMENT 'Phong thủy may mắn (JSON)',
+                                  qa_section TEXT NULL COMMENT 'Q&A section (JSON array)',
+                                  conclusion TEXT NULL COMMENT 'Lời kết',
+                                  monthly_breakdown TEXT NULL COMMENT 'Dự đoán theo tháng (JSON object)',
 
                                   metadata JSON DEFAULT NULL,
                                   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -42,6 +42,37 @@ public class HoroscopeYearlyEntity {
     @Column(name = "warnings", columnDefinition = "TEXT")
     private String warnings;
 
+    // New fields from V4 migration
+    @Column(name = "cung_menh", columnDefinition = "TEXT")
+    private String cungMenh;
+
+    @Column(name = "cung_xung_chieu", columnDefinition = "TEXT")
+    private String cungXungChieu;
+
+    @Column(name = "cung_tam_hop", columnDefinition = "TEXT")
+    private String cungTamHop;
+
+    @Column(name = "cung_nhi_hop", columnDefinition = "TEXT")
+    private String cungNhiHop;
+
+    @Column(name = "van_han", columnDefinition = "TEXT")
+    private String vanHan;
+
+    @Column(name = "tu_tru", columnDefinition = "TEXT")
+    private String tuTru;
+
+    @Column(name = "phong_thuy", columnDefinition = "TEXT")
+    private String phongThuy;
+
+    @Column(name = "qa_section", columnDefinition = "TEXT")
+    private String qaSection;
+
+    @Column(name = "conclusion", columnDefinition = "TEXT")
+    private String conclusion;
+
+    @Column(name = "monthly_breakdown", columnDefinition = "TEXT")
+    private String monthlyBreakdown;
+
     @Column(name = "metadata", columnDefinition = "JSON")
     private String metadata;
 

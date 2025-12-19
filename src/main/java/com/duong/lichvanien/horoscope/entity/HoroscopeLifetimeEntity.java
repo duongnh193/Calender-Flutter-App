@@ -52,6 +52,31 @@ public class HoroscopeLifetimeEntity {
     @Column(name = "advice", columnDefinition = "TEXT")
     private String advice;
 
+    // New fields from V4 migration
+    @Column(name = "love_by_month_group1", columnDefinition = "TEXT")
+    private String loveByMonthGroup1;
+
+    @Column(name = "love_by_month_group2", columnDefinition = "TEXT")
+    private String loveByMonthGroup2;
+
+    @Column(name = "love_by_month_group3", columnDefinition = "TEXT")
+    private String loveByMonthGroup3;
+
+    @Column(name = "compatible_ages", columnDefinition = "TEXT")
+    private String compatibleAges;
+
+    @Column(name = "difficult_years", columnDefinition = "TEXT")
+    private String difficultYears;
+
+    @Column(name = "incompatible_ages", columnDefinition = "TEXT")
+    private String incompatibleAges;
+
+    @Column(name = "yearly_progression", columnDefinition = "TEXT")
+    private String yearlyProgression;
+
+    @Column(name = "ritual_guidance", columnDefinition = "TEXT")
+    private String ritualGuidance;
+
     @Column(name = "metadata", columnDefinition = "JSON")
     private String metadata;
 

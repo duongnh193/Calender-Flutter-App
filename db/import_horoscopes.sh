@@ -14,6 +14,7 @@
 #   -d, --database   Database name (default: lich_van_nien)
 #   --skip-schema    Skip schema creation
 #   --skip-validate  Skip validation after import
+#   --skip-truncate  Skip truncating existing data before import
 #   --dry-run        Show what would be done without executing
 
 set -e
@@ -26,6 +27,7 @@ MYSQL_PASSWORD="${MYSQL_PASSWORD:-}"
 DATABASE="${DATABASE:-lich_van_nien}"
 SKIP_SCHEMA=false
 SKIP_VALIDATE=false
+SKIP_TRUNCATE=false
 DRY_RUN=false
 
 # Directory containing this script
@@ -80,6 +82,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-validate)
             SKIP_VALIDATE=true
+            shift
+            ;;
+        --skip-truncate)
+            SKIP_TRUNCATE=true
             shift
             ;;
         --dry-run)
@@ -161,14 +167,34 @@ else
     log_info "Step 1: Skipping schema creation (--skip-schema)"
 fi
 
-# Step 2: Disable indexes
-log_info "Step 2: Preparing database for bulk import..."
+# Step 2: Truncate existing data (if not skipped)
+if [ "$SKIP_TRUNCATE" = false ]; then
+    log_info "Step 2: Truncating existing horoscope data..."
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY RUN] Would truncate tables: horoscope_lifetime, horoscope_yearly, horoscope_monthly, horoscope_daily"
+    else
+        $MYSQL_CMD -e "
+            SET FOREIGN_KEY_CHECKS=0;
+            TRUNCATE TABLE horoscope_lifetime;
+            TRUNCATE TABLE horoscope_yearly;
+            TRUNCATE TABLE horoscope_monthly;
+            TRUNCATE TABLE horoscope_daily;
+            SET FOREIGN_KEY_CHECKS=1;
+        " 2>/dev/null || true
+        log_info "✓ Existing data truncated"
+    fi
+else
+    log_info "Step 2: Skipping truncate (--skip-truncate)"
+fi
+
+# Step 3: Disable indexes
+log_info "Step 3: Preparing database for bulk import..."
 if [ "$DRY_RUN" = false ]; then
     $MYSQL_CMD -e "SET GLOBAL foreign_key_checks=0;" 2>/dev/null || true
 fi
 
-# Step 3: Import data files
-log_info "Step 3: Importing data files..."
+# Step 4: Import data files
+log_info "Step 4: Importing data files..."
 
 # Order matters for foreign key relationships
 declare -a import_files=(
@@ -188,15 +214,15 @@ for import_item in "${import_files[@]}"; do
     fi
 done
 
-# Step 4: Re-enable indexes
-log_info "Step 4: Re-enabling database constraints..."
+# Step 5: Re-enable indexes
+log_info "Step 5: Re-enabling database constraints..."
 if [ "$DRY_RUN" = false ]; then
     $MYSQL_CMD -e "SET GLOBAL foreign_key_checks=1;" 2>/dev/null || true
 fi
 
-# Step 5: Validate import
+# Step 6: Validate import
 if [ "$SKIP_VALIDATE" = false ] && [ "$DRY_RUN" = false ]; then
-    log_info "Step 5: Validating import..."
+    log_info "Step 6: Validating import..."
     echo ""
     log_info "Row counts:"
     echo "  horoscope_lifetime: $(count_rows horoscope_lifetime)"
@@ -205,7 +231,7 @@ if [ "$SKIP_VALIDATE" = false ] && [ "$DRY_RUN" = false ]; then
     echo "  horoscope_daily:    $(count_rows horoscope_daily)"
     echo ""
 else
-    log_info "Step 5: Skipping validation"
+    log_info "Step 6: Skipping validation"
 fi
 
 log_info "=========================================="

@@ -71,6 +71,31 @@ public class LifetimeByBirthResponse {
     @Schema(description = "Advice and recommendations")
     private String advice;
 
+    // New fields from V4 migration
+    @Schema(description = "Love by month group 1 (months 5, 6, 9)")
+    private String loveByMonthGroup1;
+
+    @Schema(description = "Love by month group 2 (months 1, 2, 7, 10, 11, 12)")
+    private String loveByMonthGroup2;
+
+    @Schema(description = "Love by month group 3 (months 3, 4, 8)")
+    private String loveByMonthGroup3;
+
+    @Schema(description = "Compatible ages for business (JSON array)")
+    private String compatibleAges;
+
+    @Schema(description = "Difficult years (JSON array)")
+    private String difficultYears;
+
+    @Schema(description = "Incompatible ages (JSON array)")
+    private String incompatibleAges;
+
+    @Schema(description = "Yearly progression (JSON object)")
+    private String yearlyProgression;
+
+    @Schema(description = "Ritual guidance for star worship")
+    private String ritualGuidance;
+
     @Schema(description = "Additional metadata including computation details")
     private Map<String, Object> metadata;
 }

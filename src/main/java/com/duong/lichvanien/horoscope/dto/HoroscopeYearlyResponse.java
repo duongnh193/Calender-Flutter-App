@@ -38,6 +38,37 @@ public class HoroscopeYearlyResponse {
     @Schema(description = "Warnings and things to avoid")
     private String warnings;
 
+    // New fields from V4 migration
+    @Schema(description = "Cung Mệnh with stars and interpretation")
+    private String cungMenh;
+
+    @Schema(description = "Cung Xung Chiếu")
+    private String cungXungChieu;
+
+    @Schema(description = "Cung Tam Hợp")
+    private String cungTamHop;
+
+    @Schema(description = "Cung Nhị Hợp")
+    private String cungNhiHop;
+
+    @Schema(description = "Vận hạn details (JSON)")
+    private String vanHan;
+
+    @Schema(description = "Tứ trụ (JSON)")
+    private String tuTru;
+
+    @Schema(description = "Phong thủy may mắn (JSON)")
+    private String phongThuy;
+
+    @Schema(description = "Q&A section (JSON array)")
+    private String qaSection;
+
+    @Schema(description = "Conclusion")
+    private String conclusion;
+
+    @Schema(description = "Monthly breakdown (JSON object)")
+    private String monthlyBreakdown;
+
     @Schema(description = "Additional metadata")
     private Map<String, Object> metadata;
 }

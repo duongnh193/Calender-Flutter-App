@@ -217,6 +217,14 @@ public class HoroscopeService {
                 .fortune(entity.getFortune())
                 .unlucky(entity.getUnlucky())
                 .advice(entity.getAdvice())
+                .loveByMonthGroup1(entity.getLoveByMonthGroup1())
+                .loveByMonthGroup2(entity.getLoveByMonthGroup2())
+                .loveByMonthGroup3(entity.getLoveByMonthGroup3())
+                .compatibleAges(entity.getCompatibleAges())
+                .difficultYears(entity.getDifficultYears())
+                .incompatibleAges(entity.getIncompatibleAges())
+                .yearlyProgression(entity.getYearlyProgression())
+                .ritualGuidance(entity.getRitualGuidance())
                 .metadata(parseMetadata(entity.getMetadata()))
                 .build();
     }
@@ -231,6 +239,16 @@ public class HoroscopeService {
                 .fortune(entity.getFortune())
                 .health(entity.getHealth())
                 .warnings(entity.getWarnings())
+                .cungMenh(entity.getCungMenh())
+                .cungXungChieu(entity.getCungXungChieu())
+                .cungTamHop(entity.getCungTamHop())
+                .cungNhiHop(entity.getCungNhiHop())
+                .vanHan(entity.getVanHan())
+                .tuTru(entity.getTuTru())
+                .phongThuy(entity.getPhongThuy())
+                .qaSection(entity.getQaSection())
+                .conclusion(entity.getConclusion())
+                .monthlyBreakdown(entity.getMonthlyBreakdown())
                 .metadata(parseMetadata(entity.getMetadata()))
                 .build();
     }

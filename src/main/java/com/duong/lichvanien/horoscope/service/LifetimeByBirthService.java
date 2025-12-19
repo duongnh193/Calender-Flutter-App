@@ -198,6 +198,14 @@ public class LifetimeByBirthService {
                 .fortune(entity.getFortune())
                 .unlucky(entity.getUnlucky())
                 .advice(entity.getAdvice())
+                .loveByMonthGroup1(entity.getLoveByMonthGroup1())
+                .loveByMonthGroup2(entity.getLoveByMonthGroup2())
+                .loveByMonthGroup3(entity.getLoveByMonthGroup3())
+                .compatibleAges(entity.getCompatibleAges())
+                .difficultYears(entity.getDifficultYears())
+                .incompatibleAges(entity.getIncompatibleAges())
+                .yearlyProgression(entity.getYearlyProgression())
+                .ritualGuidance(entity.getRitualGuidance())
                 .metadata(metadata)
                 .build();
     }
@@ -228,6 +236,14 @@ public class LifetimeByBirthService {
                 .fortune(entity.getFortune())
                 .unlucky(entity.getUnlucky())
                 .advice(entity.getAdvice())
+                .loveByMonthGroup1(entity.getLoveByMonthGroup1())
+                .loveByMonthGroup2(entity.getLoveByMonthGroup2())
+                .loveByMonthGroup3(entity.getLoveByMonthGroup3())
+                .compatibleAges(entity.getCompatibleAges())
+                .difficultYears(entity.getDifficultYears())
+                .incompatibleAges(entity.getIncompatibleAges())
+                .yearlyProgression(entity.getYearlyProgression())
+                .ritualGuidance(entity.getRitualGuidance())
                 .metadata(metadata)
                 .build();
     }
