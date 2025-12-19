@@ -1,0 +1,26 @@
+{
+  "description": "Test case from tracuutuvi.com - Nguyễn Hoàng Dương, 2003-03-19 (solar), 5:00 AM, male",
+  "source": "tracuutuvi.com",
+  "input": {
+    "date": "2003-03-19",
+    "hour": 5,
+    "minute": 0,
+    "gender": "male",
+    "isLunar": false,
+    "name": "Nguyễn Hoàng Dương"
+  },
+  "expected": {
+    "center": {
+      "lunarYearCanChi": "Quý Mùi",
+      "lunarMonth": 2,
+      "lunarDay": 17,
+      "lunarDayCanChi": "Tân Mão",
+      "birthHourCanChi": "Tân Mão",
+      "banMenh": "Dương Liễu Mộc",
+      "banMenhNguHanh": "MOC",
+      "cuc": "Kim tứ cục",
+      "cucValue": 4
+    },
+    "isThuan": false
+  }
+}

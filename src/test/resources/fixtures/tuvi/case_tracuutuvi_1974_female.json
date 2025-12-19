@@ -1,0 +1,26 @@
+{
+  "description": "Test case from tracuutuvi.com - Nguyễn Phương Tú, 1974-05-09 (solar), 9:30 AM, female",
+  "source": "tracuutuvi.com",
+  "input": {
+    "date": "1974-05-09",
+    "hour": 9,
+    "minute": 30,
+    "gender": "female",
+    "isLunar": false,
+    "name": "Nguyễn Phương Tú"
+  },
+  "expected": {
+    "center": {
+      "lunarYearCanChi": "Giáp Dần",
+      "lunarMonth": 4,
+      "lunarDay": 18,
+      "lunarDayCanChi": "Canh Tuất",
+      "birthHourCanChi": "Tân Tỵ",
+      "banMenh": "Đại Khê Thủy",
+      "banMenhNguHanh": "THUY",
+      "cuc": "Thủy nhị cục",
+      "cucValue": 2
+    },
+    "isThuan": false
+  }
+}

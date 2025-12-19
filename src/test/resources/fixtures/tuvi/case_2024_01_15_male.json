@@ -1,0 +1,18 @@
+{
+  "description": "Test case for 2024-01-15, male, 12:00 PM (Giáp Thìn year)",
+  "input": {
+    "date": "2024-01-15",
+    "hour": 12,
+    "minute": 0,
+    "gender": "male",
+    "isLunar": false
+  },
+  "expected": {
+    "center": {
+      "lunarYear": 2023,
+      "banMenhNguHanh": "KIM"
+    },
+    "isThuan": false
+  },
+  "notes": "This is before lunar new year 2024, so lunar year is still 2023 (Quý Mão)"
+}

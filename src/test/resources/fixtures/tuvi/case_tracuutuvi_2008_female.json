@@ -1,0 +1,26 @@
+{
+  "description": "Test case from tracuutuvi.com - Nguyễn Bảo Mai, 2008-09-03 (solar), 16:30, female",
+  "source": "tracuutuvi.com",
+  "input": {
+    "date": "2008-09-03",
+    "hour": 16,
+    "minute": 30,
+    "gender": "female",
+    "isLunar": false,
+    "name": "Nguyễn Bảo Mai"
+  },
+  "expected": {
+    "center": {
+      "lunarYearCanChi": "Mậu Tý",
+      "lunarMonth": 8,
+      "lunarDay": 4,
+      "lunarDayCanChi": "Bính Ngọ",
+      "birthHourCanChi": "Bính Thân",
+      "banMenh": "Tích Lịch Hỏa",
+      "banMenhNguHanh": "HOA",
+      "cuc": "Kim tứ cục",
+      "cucValue": 4
+    },
+    "isThuan": false
+  }
+}

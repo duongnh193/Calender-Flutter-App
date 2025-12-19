@@ -1,0 +1,39 @@
+{
+  "description": "Test case from tracuutuvi.com - 1995-03-02, female, 8:30 AM",
+  "input": {
+    "date": "1995-03-02",
+    "hour": 8,
+    "minute": 30,
+    "gender": "female",
+    "isLunar": false,
+    "name": "Thân Chủ 2026"
+  },
+  "expected": {
+    "center": {
+      "lunarYearCanChi": "Ất Hợi",
+      "lunarYear": 1995,
+      "lunarMonth": 2,
+      "lunarDay": 2,
+      "lunarDayCanChi": "Nhâm Thìn",
+      "birthHourCanChi": "Giáp Thìn",
+      "banMenh": "Sơn Đầu Hỏa",
+      "banMenhNguHanh": "HOA",
+      "cuc": "Thổ ngũ cục",
+      "cucValue": 5
+    },
+    "menhPalaceChi": "HOI",
+    "thanPalaceChi": "MUI",
+    "isThuan": true,
+    "starPositions": {
+      "TU_VI": "MAO",
+      "THIEN_PHU": "SUU",
+      "THIEN_CO": "THIN"
+    },
+    "markers": {
+      "tuanStart": "THAN",
+      "tuanEnd": "DAU",
+      "trietStart": "NGO",
+      "trietEnd": "MUI"
+    }
+  }
+}

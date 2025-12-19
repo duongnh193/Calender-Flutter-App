@@ -1,0 +1,19 @@
+{
+  "description": "Test case for 2000-06-01, male, 6:00 AM (Canh Thìn year - Dragon)",
+  "input": {
+    "date": "2000-06-01",
+    "hour": 6,
+    "minute": 0,
+    "gender": "male",
+    "isLunar": false
+  },
+  "expected": {
+    "center": {
+      "lunarYearCanChi": "Canh Thìn",
+      "lunarYear": 2000,
+      "banMenhNguHanh": "KIM"
+    },
+    "isThuan": true
+  },
+  "notes": "Canh is Dương, male => Dương nam = Thuận"
+}
