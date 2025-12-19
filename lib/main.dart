@@ -30,10 +30,10 @@ class LichVanNienApp extends ConsumerWidget {
 
     return AppLifecycleHandler(
       child: MaterialApp.router(
-        title: 'Lịch Vạn Niên',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        routerConfig: router,
+      title: 'Lịch Vạn Niên',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      routerConfig: router,
       ),
     );
   }

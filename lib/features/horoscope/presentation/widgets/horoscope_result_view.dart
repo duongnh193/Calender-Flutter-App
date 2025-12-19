@@ -269,59 +269,81 @@ class HoroscopeResultView extends ConsumerWidget {
             year: birthYear,
           ),
           const SizedBox(height: AppSpacing.xl),
-          // Overview section
+          
+          // I. Tổng quát
           if (result.overview != null && result.overview!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'I. Thông tin tổng quan',
+              title: 'I. Tổng quát',
               content: result.overview!,
               sizeClass: sizeClass,
             ),
-          // Career section
-          if (result.career != null && result.career!.isNotEmpty)
+          
+          // II. Tình duyên (with month groups)
+          if (result.loveByMonthGroup1 != null || result.loveByMonthGroup2 != null || result.loveByMonthGroup3 != null)
+            _buildLoveByMonthSection(result, sizeClass)
+          else if (result.love != null && result.love!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'II. Sự nghiệp',
-              content: result.career!,
-              sizeClass: sizeClass,
-            ),
-          // Love section
-          if (result.love != null && result.love!.isNotEmpty)
-            HoroscopeResultSection(
-              title: 'III. Tình duyên',
+              title: 'II. Tình duyên',
               content: result.love!,
               sizeClass: sizeClass,
             ),
-          // Health section
-          if (result.health != null && result.health!.isNotEmpty)
-            HoroscopeResultSection(
-              title: 'IV. Sức khỏe',
-              content: result.health!,
-              sizeClass: sizeClass,
-            ),
-          // Family section
-          if (result.family != null && result.family!.isNotEmpty)
-            HoroscopeResultSection(
-              title: 'V. Gia đình',
-              content: result.family!,
-              sizeClass: sizeClass,
-            ),
-          // Fortune section
+          
+          // III. Gia đình sự nghiệp
+          if (result.family != null && result.family!.isNotEmpty || result.career != null && result.career!.isNotEmpty)
+            _buildFamilyCareerSection(result, sizeClass),
+          
+          // IV. Tài vận
           if (result.fortune != null && result.fortune!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'VI. Tài lộc',
+              title: 'IV. Tài vận',
               content: result.fortune!,
               sizeClass: sizeClass,
             ),
-          // Unlucky section
+          
+          // V. Tuổi hợp làm ăn
+          if (result.compatibleAges != null && result.compatibleAges!.isNotEmpty)
+            _buildCompatibleAgesSection(result.compatibleAges!, sizeClass),
+          
+          // VI. Năm khó khăn nhất
+          if (result.difficultYears != null && result.difficultYears!.isNotEmpty)
+            _buildDifficultYearsSection(result.difficultYears!, sizeClass),
+          
+          // VII. Diễn biến từng năm
+          if (result.yearlyProgression != null && result.yearlyProgression!.isNotEmpty)
+            _buildYearlyProgressionSection(result.yearlyProgression!, sizeClass),
+          
+          // VIII. Tuổi đại kỵ
+          if (result.incompatibleAges != null && result.incompatibleAges!.isNotEmpty)
+            _buildIncompatibleAgesSection(result.incompatibleAges!, sizeClass),
+          
+          // IX. Nghi lễ cúng sao
+          if (result.ritualGuidance != null && result.ritualGuidance!.isNotEmpty)
+            HoroscopeResultSection(
+              title: 'IX. Nghi lễ cúng sao',
+              content: result.ritualGuidance!,
+              sizeClass: sizeClass,
+            ),
+          
+          // Health section (if exists)
+          if (result.health != null && result.health!.isNotEmpty)
+            HoroscopeResultSection(
+              title: 'Sức khỏe',
+              content: result.health!,
+              sizeClass: sizeClass,
+            ),
+          
+          // Unlucky section (if exists)
           if (result.unlucky != null && result.unlucky!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'VII. Điều cần tránh',
+              title: 'Điều cần tránh',
               content: result.unlucky!,
               sizeClass: sizeClass,
             ),
-          // Advice section
+          
+          // Advice section (if exists)
           if (result.advice != null && result.advice!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'VIII. Lời khuyên',
+              title: 'Lời khuyên',
               content: result.advice!,
               sizeClass: sizeClass,
             ),
@@ -379,34 +401,75 @@ class HoroscopeResultView extends ConsumerWidget {
             year: result.year,
           ),
           const SizedBox(height: AppSpacing.xl),
+          
+          // Summary section (fallback if new fields don't exist)
           if (result.summary != null && result.summary!.isNotEmpty)
             HoroscopeResultSection(
               title: 'I. Tổng quan',
               content: result.summary!,
               sizeClass: sizeClass,
             ),
-          if (result.career != null && result.career!.isNotEmpty)
+          
+          // I. Cung Mệnh
+          if (result.cungMenh != null && result.cungMenh!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'II. Sự nghiệp',
-              content: result.career!,
+              title: 'II. Cung Mệnh (Cung Tiểu Vận)',
+              content: result.cungMenh!,
               sizeClass: sizeClass,
             ),
-          if (result.love != null && result.love!.isNotEmpty)
+          
+          // II. Cung Xung Chiếu
+          if (result.cungXungChieu != null && result.cungXungChieu!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'III. Tình duyên',
-              content: result.love!,
+              title: 'III. Cung Xung Chiếu',
+              content: result.cungXungChieu!,
               sizeClass: sizeClass,
             ),
-          if (result.health != null && result.health!.isNotEmpty)
+          
+          // III. Cung Tam Hợp
+          if (result.cungTamHop != null && result.cungTamHop!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'IV. Sức khỏe',
-              content: result.health!,
+              title: 'IV. Cung Tam Hợp',
+              content: result.cungTamHop!,
               sizeClass: sizeClass,
             ),
-          if (result.fortune != null && result.fortune!.isNotEmpty)
+          
+          // IV. Cung Nhị Hợp
+          if (result.cungNhiHop != null && result.cungNhiHop!.isNotEmpty)
             HoroscopeResultSection(
-              title: 'V. Tài lộc',
-              content: result.fortune!,
+              title: 'V. Cung Nhị Hợp',
+              content: result.cungNhiHop!,
+              sizeClass: sizeClass,
+            ),
+          
+          // V. Vận hạn
+          if (result.vanHan != null && result.vanHan!.isNotEmpty)
+            _buildVanHanSection(result.vanHan!, sizeClass),
+          
+          // VI. Tứ trụ
+          if (result.tuTru != null && result.tuTru!.isNotEmpty)
+            _buildTuTruSection(result.tuTru!, sizeClass),
+          
+          // VII. Luận giải theo phương diện
+          _buildYearlyAspectsSection(result, sizeClass),
+          
+          // VIII. Dự đoán theo tháng
+          if (result.monthlyBreakdown != null && result.monthlyBreakdown!.isNotEmpty)
+            _buildMonthlyBreakdownSection(result.monthlyBreakdown!, result.year, sizeClass),
+          
+          // IX. Phong thủy may mắn
+          if (result.phongThuy != null && result.phongThuy!.isNotEmpty)
+            _buildPhongThuySection(result.phongThuy!, sizeClass),
+          
+          // X. Q&A Section
+          if (result.qaSection != null && result.qaSection!.isNotEmpty)
+            _buildQASection(result.qaSection!, sizeClass),
+          
+          // XI. Lời kết
+          if (result.conclusion != null && result.conclusion!.isNotEmpty)
+            HoroscopeResultSection(
+              title: 'Lời kết',
+              content: result.conclusion!,
               sizeClass: sizeClass,
             ),
         ],
@@ -544,12 +607,12 @@ class HoroscopeResultView extends ConsumerWidget {
             builder: (context) {
               final imagePath = ZodiacUtils.getZodiacImagePath(zodiacCode);
               return Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryRed.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primaryRed.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
                 child: imagePath != null
                     ? ClipOval(
                         child: Image.asset(
@@ -569,9 +632,9 @@ class HoroscopeResultView extends ConsumerWidget {
                       )
                     : Icon(
                         Icons.star,
-                        size: 40,
-                        color: AppColors.primaryRed,
-                      ),
+              size: 40,
+              color: AppColors.primaryRed,
+            ),
               );
             },
           ),
@@ -628,6 +691,337 @@ class HoroscopeResultView extends ConsumerWidget {
       return 'Tử vi ngày ${date.day}/${date.month}/${date.year}';
     }
     return 'Tử vi';
+  }
+
+  // Helper methods for new sections
+  Widget _buildLoveByMonthSection(LifetimeByBirthResponse result, ScreenSizeClass sizeClass) {
+    final content = StringBuffer();
+    content.writeln('Vấn đề nhân duyên được chia thành ba trường hợp sau:\n');
+    
+    if (result.loveByMonthGroup1 != null && result.loveByMonthGroup1!.isNotEmpty) {
+      content.writeln(result.loveByMonthGroup1!);
+      content.writeln('\n');
+    }
+    if (result.loveByMonthGroup2 != null && result.loveByMonthGroup2!.isNotEmpty) {
+      content.writeln(result.loveByMonthGroup2!);
+      content.writeln('\n');
+    }
+    if (result.loveByMonthGroup3 != null && result.loveByMonthGroup3!.isNotEmpty) {
+      content.writeln(result.loveByMonthGroup3!);
+    }
+    
+    return HoroscopeResultSection(
+      title: 'II. Tình duyên',
+      content: content.toString(),
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildFamilyCareerSection(LifetimeByBirthResponse result, ScreenSizeClass sizeClass) {
+    final content = StringBuffer();
+    if (result.family != null && result.family!.isNotEmpty) {
+      content.writeln(result.family!);
+      content.writeln('\n');
+    }
+    if (result.career != null && result.career!.isNotEmpty) {
+      content.writeln(result.career!);
+    }
+    
+    if (content.isEmpty) return const SizedBox.shrink();
+    
+    return HoroscopeResultSection(
+      title: 'III. Gia đình sự nghiệp',
+      content: content.toString(),
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildCompatibleAgesSection(List<String> compatibleAges, ScreenSizeClass sizeClass) {
+    final content = 'Tuổi hợp làm ăn: ${compatibleAges.join(', ')}. '
+        'Nên chọn các tuổi này để làm ăn chung, sẽ đạt được sự thịnh vượng, thuận tiện, may mắn và thành công ngày càng tăng.';
+    
+    return HoroscopeResultSection(
+      title: 'V. Tuổi hợp làm ăn',
+      content: content,
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildDifficultYearsSection(List<int> difficultYears, ScreenSizeClass sizeClass) {
+    final yearsText = difficultYears.map((y) => '$y tuổi').join(', ');
+    final content = 'Năm khó khăn nhất: Cần thận trọng vào các năm $yearsText. '
+        'Trong những năm này, có thể gặp nhiều khó khăn trong tình cảm và gia đình, '
+        'cần cẩn thận trong công việc, nên trì hoãn các ý tưởng mới hoặc kế hoạch lớn sang các năm khác để có kết quả tốt hơn.';
+    
+    return HoroscopeResultSection(
+      title: 'VI. Năm khó khăn nhất',
+      content: content,
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildYearlyProgressionSection(Map<String, String> yearlyProgression, ScreenSizeClass sizeClass) {
+    final content = StringBuffer();
+    content.writeln('Diễn biến từng năm:\n');
+    
+    final sortedKeys = yearlyProgression.keys.toList()..sort();
+    for (final key in sortedKeys) {
+      final value = yearlyProgression[key];
+      if (value != null && value.isNotEmpty) {
+        content.writeln('Từ năm $key:');
+        content.writeln(value);
+        content.writeln('\n');
+      }
+    }
+    
+    return HoroscopeResultSection(
+      title: 'VII. Diễn biến từng năm',
+      content: content.toString(),
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildIncompatibleAgesSection(List<String> incompatibleAges, ScreenSizeClass sizeClass) {
+    final agesText = incompatibleAges.join(', ');
+    final content = 'Tuổi đại kỵ: Không nên kết hôn hay cộng tác trong công việc với những tuổi xung khắc: $agesText. '
+        'Nếu vẫn muốn kết hôn, nên tránh tổ chức cưới xin rầm rộ mà chỉ được làm mâm cơm cúng gia tộc tổ tiên. '
+        'Quan trọng nhất vẫn là ăn ở hiền lành, làm nhiều việc thiện, tích nhiều phúc đức thì mọi chuyện xấu sẽ được hóa giải.';
+    
+    return HoroscopeResultSection(
+      title: 'VIII. Tuổi đại kỵ',
+      content: content,
+      sizeClass: sizeClass,
+    );
+  }
+
+  // Yearly helper methods
+  Widget _buildVanHanSection(Map<String, dynamic> vanHan, ScreenSizeClass sizeClass) {
+    final content = StringBuffer();
+    if (vanHan['han_nam'] != null) {
+      content.writeln(vanHan['han_nam'].toString());
+      content.writeln('\n');
+    }
+    if (vanHan['han_tuoi'] != null) {
+      content.writeln('Hạn tuổi: ${vanHan['han_tuoi']}');
+      content.writeln('\n');
+    }
+    if (vanHan['hoa_giai'] != null) {
+      content.writeln('Cách hóa giải: ${vanHan['hoa_giai']}');
+    }
+    
+    return HoroscopeResultSection(
+      title: 'V. Vận hạn',
+      content: content.toString(),
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildTuTruSection(Map<String, dynamic> tuTru, ScreenSizeClass sizeClass) {
+    final content = StringBuffer();
+    if (tuTru['tong_quan'] != null) {
+      content.writeln(tuTru['tong_quan'].toString());
+      content.writeln('\n');
+    }
+    if (tuTru['cong_viec'] != null) {
+      content.writeln('Công việc: ${tuTru['cong_viec']}');
+      content.writeln('\n');
+    }
+    if (tuTru['tai_chinh'] != null) {
+      content.writeln('Tài chính: ${tuTru['tai_chinh']}');
+      content.writeln('\n');
+    }
+    if (tuTru['suc_khoe'] != null) {
+      content.writeln('Sức khỏe: ${tuTru['suc_khoe']}');
+    }
+    
+    return HoroscopeResultSection(
+      title: 'VI. Tứ trụ',
+      content: content.toString(),
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildYearlyAspectsSection(HoroscopeYearly result, ScreenSizeClass sizeClass) {
+    final sections = <Widget>[];
+    
+    if (result.career != null && result.career!.isNotEmpty) {
+      sections.add(HoroscopeResultSection(
+        title: '1. Công danh sự nghiệp',
+        content: result.career!,
+        sizeClass: sizeClass,
+      ));
+    }
+    
+    if (result.fortune != null && result.fortune!.isNotEmpty) {
+      sections.add(HoroscopeResultSection(
+        title: '2. Tài chính',
+        content: result.fortune!,
+        sizeClass: sizeClass,
+      ));
+    }
+    
+    if (result.love != null && result.love!.isNotEmpty) {
+      sections.add(HoroscopeResultSection(
+        title: '3. Tình duyên, gia đạo',
+        content: result.love!,
+        sizeClass: sizeClass,
+      ));
+    }
+    
+    if (result.health != null && result.health!.isNotEmpty) {
+      sections.add(HoroscopeResultSection(
+        title: '4. Sức khỏe',
+        content: result.health!,
+        sizeClass: sizeClass,
+      ));
+    }
+    
+    if (sections.isEmpty) return const SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.m),
+          child: Text(
+            'VII. Luận giải tử vi trên các phương diện cuộc sống',
+            style: AppTypography.headline2(sizeClass).copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryRed,
+            ),
+          ),
+        ),
+        ...sections,
+      ],
+    );
+  }
+
+  Widget _buildMonthlyBreakdownSection(Map<String, String> monthlyBreakdown, int year, ScreenSizeClass sizeClass) {
+    final content = StringBuffer();
+    content.writeln('IV. Dự đoán tử vi theo tháng năm $year\n');
+    
+    final sortedKeys = monthlyBreakdown.keys.toList()
+      ..sort((a, b) => int.tryParse(a)?.compareTo(int.tryParse(b) ?? 0) ?? 0);
+    
+    for (final monthKey in sortedKeys) {
+      final month = int.tryParse(monthKey);
+      if (month != null && month >= 1 && month <= 12) {
+        final value = monthlyBreakdown[monthKey];
+        if (value != null && value.isNotEmpty) {
+          content.writeln('- Tử vi tháng $month/$year:');
+          content.writeln(value);
+          content.writeln('\n');
+        }
+      }
+    }
+    
+    return HoroscopeResultSection(
+      title: 'VIII. Dự đoán theo tháng',
+      content: content.toString(),
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildPhongThuySection(Map<String, dynamic> phongThuy, ScreenSizeClass sizeClass) {
+    final content = StringBuffer();
+    content.writeln('V. Phong thủy may mắn đầu năm\n');
+    
+    if (phongThuy['nguoi_xong_nha'] != null) {
+      content.writeln('1. Chọn người xông nhà hợp tuổi: Nên mời người sinh năm ${phongThuy['nguoi_xong_nha']} đến xông đất để mang lại nhiều may mắn, giúp mọi việc thuận lợi, tài lộc dồi dào và gia đình hạnh phúc, hòa thuận.');
+      content.writeln('\n');
+    }
+    
+    if (phongThuy['ngay_xuat_hanh'] != null || phongThuy['huong'] != null) {
+      content.writeln('2. Chọn ngày đẹp, hướng tốt xuất hành khai xuân:');
+      if (phongThuy['ngay_xuat_hanh'] != null) {
+        content.writeln('   Ngày lý tưởng để xuất hành: ${phongThuy['ngay_xuat_hanh']}');
+      }
+      if (phongThuy['huong'] != null) {
+        content.writeln('   Hướng xuất hành thuận lợi: ${phongThuy['huong']}');
+      }
+      content.writeln('\n');
+    }
+    
+    if (phongThuy['ngay_khai_truong'] != null) {
+      content.writeln('3. Chọn ngày tốt khai trương: ${phongThuy['ngay_khai_truong']}');
+    }
+    
+    return HoroscopeResultSection(
+      title: 'IX. Phong thủy may mắn',
+      content: content.toString(),
+      sizeClass: sizeClass,
+    );
+  }
+
+  Widget _buildQASection(List<Map<String, String>> qaSection, ScreenSizeClass sizeClass) {
+    final qaItems = <Widget>[];
+    
+    for (int i = 0; i < qaSection.length; i++) {
+      final qa = qaSection[i];
+      final question = qa['question'] ?? '';
+      final answer = qa['answer'] ?? '';
+      
+      if (question.isNotEmpty && answer.isNotEmpty) {
+        qaItems.add(
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: i < qaSection.length - 1 ? AppSpacing.l : 0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  question,
+                  style: AppTypography.headline2(sizeClass).copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryRed,
+                    fontSize: (AppTypography.headline2(sizeClass).fontSize ?? 20) * 0.85,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.m),
+                Text(
+                  answer,
+                  style: AppTypography.body1(sizeClass).copyWith(
+                    height: 1.6,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+    
+    if (qaItems.isEmpty) return const SizedBox.shrink();
+    
+    // Wrap in same container style as HoroscopeResultSection
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.l),
+      padding: const EdgeInsets.all(AppSpacing.l),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section title
+          Text(
+            'X. Câu hỏi thường gặp',
+            style: AppTypography.headline2(sizeClass).copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryRed,
+              fontSize: (AppTypography.headline2(sizeClass).fontSize ?? 20) * 0.9,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          // Q&A items
+          ...qaItems,
+        ],
+      ),
+    );
   }
 }
 

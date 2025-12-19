@@ -44,30 +44,30 @@ class DailyHeaderMonthChip extends StatelessWidget {
             },
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.l,
-                vertical: AppSpacing.s,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadow.withAlpha((255 * 0.1).round()),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.l,
+              vertical: AppSpacing.s,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadow.withAlpha((255 * 0.1).round()),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    label,
-                    style: AppTypography.body1(
-                      sizeClass,
-                    ).copyWith(fontWeight: FontWeight.w600),
+              label,
+              style: AppTypography.body1(
+                sizeClass,
+              ).copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   const Icon(

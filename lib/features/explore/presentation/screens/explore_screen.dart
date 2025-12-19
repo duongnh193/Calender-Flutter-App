@@ -96,6 +96,8 @@ class ExploreScreen extends ConsumerWidget {
   void _handleItemTap(BuildContext context, ExploreItemModel item) {
     if (item.label == 'Tử vi bói toán') {
       context.push('/horoscope');
+    } else if (item.label == 'Lá số tử vi') {
+      context.push('/tuvi-chart');
     }
     // Handle other items here
   }
@@ -106,6 +108,11 @@ final _utilitiesItems = <ExploreItemModel>[
     icon: Icons.stars,
     label: 'Tử vi bói toán',
     color: AppColors.primaryRed,
+  ),
+  ExploreItemModel(
+    icon: Icons.auto_awesome,
+    label: 'Lá số tử vi',
+    color: AppColors.accentPurple,
   ),
   ExploreItemModel(
     icon: Icons.sync_alt,

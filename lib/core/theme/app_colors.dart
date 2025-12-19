@@ -10,6 +10,11 @@ class AppColors {
   static const Color accentOrange = Color(0xFFF57C00);
   static const Color accentYellow = Color(0xFFFFC107);
   static const Color accentLightBlue = Color(0xFF4FC3F7);
+  static const Color accentPurple = Color(0xFF9C27B0);
+  static const Color primary = Color(0xFF1976D2);
+  static const Color primaryLight = Color(0xFFBBDEFB);
+  static const Color accent = Color(0xFFE91E63);
+  static const Color surfaceDark = Color(0xFF1E1E1E);
   static const Color iosRed = Color(0xFFFF3B30);
   static const Color iosLinkBlue = Color(0xFF007AFF);
   static const Color iosGrayPrimary = Color(0xFF1C1C1E);

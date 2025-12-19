@@ -64,21 +64,21 @@ class MonthHeader extends StatelessWidget {
                   }
                 },
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        primaryText,
-                        style: titleStyle,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      primaryText,
+                      style: titleStyle,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: AppSpacing.xs),
-                    const Icon(
-                      Icons.arrow_drop_down,
-                      color: AppColors.calendarNavArrow,
-                    ),
-                  ],
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    color: AppColors.calendarNavArrow,
+                  ),
+                ],
                 ),
               ),
               const SizedBox(height: AppSpacing.xs / 2),

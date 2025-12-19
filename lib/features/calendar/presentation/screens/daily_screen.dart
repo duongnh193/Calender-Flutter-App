@@ -197,95 +197,95 @@ class _DailyScreenState extends ConsumerState<DailyScreen> {
       },
       child: CustomScrollView(
         physics: const NeverScrollableScrollPhysics(),
-        slivers: [
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: horizontalPadding,
-                right: horizontalPadding,
-                top: AppSpacing.m,
-                bottom: AppSpacing.m,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // CHIP THÁNG
-                  DailyHeaderMonthChip(
-                    sizeClass: sizeClass,
-                    label: monthLabel,
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: horizontalPadding,
+              right: horizontalPadding,
+              top: AppSpacing.m,
+              bottom: AppSpacing.m,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // CHIP THÁNG
+                DailyHeaderMonthChip(
+                  sizeClass: sizeClass,
+                  label: monthLabel,
                     selectedDate: selectedDate,
                     onDateSelected: (date) {
                       ref.read(selectedDateProvider.notifier).state = date;
                     },
-                  ),
+                ),
 
-                  // SỐ NGÀY
-                  Text(
-                    '${selectedDate.day}',
-                    style: AppTypography.displayNumber(sizeClass)
-                        .copyWith(color: AppColors.accentBlue),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.l),
+                // SỐ NGÀY
+                Text(
+                  '${selectedDate.day}',
+                  style: AppTypography.displayNumber(sizeClass)
+                      .copyWith(color: AppColors.accentBlue),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.l),
 
-                  // THỨ
-                  Text(
-                    weekdayLabel,
-                    style: AppTypography.headline2(sizeClass),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
+                // THỨ
+                Text(
+                  weekdayLabel,
+                  style: AppTypography.headline2(sizeClass),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xxl),
 
-                  // QUOTE
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m),
-                    child: DailyQuoteSection(
-                      sizeClass: sizeClass,
-                      quote: _getQuoteForDate(selectedDate),
-                      source: 'Kinh dịch',
+                // QUOTE
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m),
+                  child: DailyQuoteSection(
+                    sizeClass: sizeClass,
+                    quote: _getQuoteForDate(selectedDate),
+                    source: 'Kinh dịch',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                // WEATHER - TODO: Connect to weather API
+                DailyWeatherRow(
+                  sizeClass: sizeClass,
+                  location: 'Hà Nội |',
+                  temperature: '-- °C',
+                ),
+
+                const Spacer(),
+
+                // Loading indicator overlay
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.m),
+                    child: SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
 
-                  // WEATHER - TODO: Connect to weather API
-                  DailyWeatherRow(
-                    sizeClass: sizeClass,
-                    location: 'Hà Nội |',
-                    temperature: '-- °C',
-                  ),
-
-                  const Spacer(),
-
-                  // Loading indicator overlay
-                  if (isLoading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: AppSpacing.m),
-                      child: SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-
-                  // GRID GIỜ / NGÀY / THÁNG / NĂM
-                  DateDetailGrid(
-                    sizeClass: sizeClass,
-                    time: currentTimeLabel,
-                    day: lunarDayLabel,
-                    month: lunarMonthLabel,
-                    year: lunarYearLabel,
-                    timeCanChi: canChiHourLabel,
-                    dayCanChi: canChiDayLabel,
-                    monthCanChi: canChiMonthLabel,
-                    yearCanChi: canChiYearLabel,
-                  ),
-                ],
-              ),
+                // GRID GIỜ / NGÀY / THÁNG / NĂM
+                DateDetailGrid(
+                  sizeClass: sizeClass,
+                  time: currentTimeLabel,
+                  day: lunarDayLabel,
+                  month: lunarMonthLabel,
+                  year: lunarYearLabel,
+                  timeCanChi: canChiHourLabel,
+                  dayCanChi: canChiDayLabel,
+                  monthCanChi: canChiMonthLabel,
+                  yearCanChi: canChiYearLabel,
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ],
       ),
     );
   }

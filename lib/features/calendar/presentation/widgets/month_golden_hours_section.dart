@@ -74,10 +74,10 @@ class MonthGoldenHoursSection extends StatelessWidget {
                 // Second row (items 4-6)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: items
+            children: items
                       .skip(3)
                       .take(3)
-                      .map(
+                .map(
                         (item) => Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -89,8 +89,8 @@ class MonthGoldenHoursSection extends StatelessWidget {
                             ),
                           ),
                         ),
-                      )
-                      .toList(),
+                )
+                .toList(),
                 ),
               ],
             ],

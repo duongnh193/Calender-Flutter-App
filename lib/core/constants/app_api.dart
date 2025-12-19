@@ -34,4 +34,8 @@ class AppApi {
 
   /// GET /horoscope/can-chi?birthDate={date}
   static const String horoscopeCanChi = '/horoscope/can-chi';
+
+  // ==================== Tu Vi Chart Endpoints ====================
+  /// POST /tuvi/chart
+  static const String tuViChart = '/tuvi/chart';
 }

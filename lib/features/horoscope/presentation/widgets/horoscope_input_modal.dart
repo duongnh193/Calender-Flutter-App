@@ -245,6 +245,7 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
+                errorMaxLines: 2,
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [
@@ -252,10 +253,34 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
                 LengthLimitingTextInputFormatter(2),
               ],
               initialValue: _hour.toString(),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Vui lòng nhập giờ sinh';
+                }
+                final hour = int.tryParse(value);
+                if (hour == null) {
+                  return 'Giờ phải là số';
+                }
+                if (hour < 0 || hour > 23) {
+                  return 'Giờ phải trong khoảng 0-23';
+                }
+                return null;
+              },
               onChanged: (value) {
                 final hour = int.tryParse(value);
                 if (hour != null && hour >= 0 && hour <= 23) {
                   setState(() => _hour = hour);
+                  // Clear validation error when valid value is entered
+                  _formKey.currentState?.validate();
+                } else if (value.isEmpty) {
+                  // Clear error when field is empty (will be validated on submit)
+                  _formKey.currentState?.validate();
+                }
+              },
+              onSaved: (value) {
+                final hour = int.tryParse(value ?? '0');
+                if (hour != null && hour >= 0 && hour <= 23) {
+                  _hour = hour;
                 }
               },
             ),
@@ -268,6 +293,7 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
+                errorMaxLines: 2,
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [
@@ -275,10 +301,34 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
                 LengthLimitingTextInputFormatter(2),
               ],
               initialValue: _minute.toString(),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Vui lòng nhập phút';
+                }
+                final minute = int.tryParse(value);
+                if (minute == null) {
+                  return 'Phút phải là số';
+                }
+                if (minute < 0 || minute > 59) {
+                  return 'Phút phải trong khoảng 0-59';
+                }
+                return null;
+              },
               onChanged: (value) {
                 final minute = int.tryParse(value);
                 if (minute != null && minute >= 0 && minute <= 59) {
                   setState(() => _minute = minute);
+                  // Clear validation error when valid value is entered
+                  _formKey.currentState?.validate();
+                } else if (value.isEmpty) {
+                  // Clear error when field is empty (will be validated on submit)
+                  _formKey.currentState?.validate();
+                }
+              },
+              onSaved: (value) {
+                final minute = int.tryParse(value ?? '0');
+                if (minute != null && minute >= 0 && minute <= 59) {
+                  _minute = minute;
                 }
               },
             ),
@@ -575,46 +625,46 @@ class _HoroscopeInputModalState extends ConsumerState<HoroscopeInputModal> {
     setState(() => _isSubmitting = true);
 
     try {
-      switch (widget.type) {
-        case HoroscopeType.lifetime:
+    switch (widget.type) {
+      case HoroscopeType.lifetime:
           // Date is already validated by form validator
-          ref.read(lifetimeByBirthInputProvider.notifier).setInput(
-                date: DateTimeUtils.formatDateForApi(_selectedDate!),
-                hour: _hour,
-                minute: _minute,
-                isLunar: _isLunar,
-                isLeapMonth: _isLeapMonth,
-                gender: _gender.value,
-              );
-          break;
-        case HoroscopeType.yearly:
+        ref.read(lifetimeByBirthInputProvider.notifier).setInput(
+              date: DateTimeUtils.formatDateForApi(_selectedDate!),
+              hour: _hour,
+              minute: _minute,
+              isLunar: _isLunar,
+              isLeapMonth: _isLeapMonth,
+              gender: _gender.value,
+            );
+        break;
+      case HoroscopeType.yearly:
           // Only pass the zodiac identifier that was actually provided (either ID or code, not both)
-          ref.read(yearlyHoroscopeInputProvider.notifier).setInput(
-                zodiacId: _selectedZodiacId,
-                zodiacCode: _selectedZodiacCode,
-                year: _selectedYear,
-              );
-          break;
-        case HoroscopeType.monthly:
+        ref.read(yearlyHoroscopeInputProvider.notifier).setInput(
+              zodiacId: _selectedZodiacId,
+              zodiacCode: _selectedZodiacCode,
+              year: _selectedYear,
+            );
+        break;
+      case HoroscopeType.monthly:
           // Only pass the zodiac identifier that was actually provided (either ID or code, not both)
-          ref.read(monthlyHoroscopeInputProvider.notifier).setInput(
+        ref.read(monthlyHoroscopeInputProvider.notifier).setInput(
               zodiacId: _selectedZodiacId,
               zodiacCode: _selectedZodiacCode,
               year: _selectedYear,
               month: _selectedMonth,
             );
-          break;
-        case HoroscopeType.daily:
+        break;
+      case HoroscopeType.daily:
           // Only pass the zodiac identifier that was actually provided (either ID or code, not both)
-          ref.read(dailyHoroscopeInputProvider.notifier).setInput(
-                zodiacId: _selectedZodiacId,
-                zodiacCode: _selectedZodiacCode,
-                date: _selectedDay!,
-              );
-          break;
-      }
+        ref.read(dailyHoroscopeInputProvider.notifier).setInput(
+              zodiacId: _selectedZodiacId,
+              zodiacCode: _selectedZodiacCode,
+              date: _selectedDay!,
+            );
+        break;
+    }
 
-      widget.onSubmitted();
+    widget.onSubmitted();
     } finally {
       // Reset submitting state after a short delay to allow UI to update
       Future.delayed(const Duration(milliseconds: 300), () {
