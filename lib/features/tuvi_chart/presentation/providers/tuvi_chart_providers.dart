@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../data/tuvi_chart_repository.dart';
+import '../../data/tuvi_interpretation_repository.dart';
 import '../../domain/tuvi_chart_models.dart';
+import '../../domain/tuvi_interpretation_models.dart';
 
 /// Provider for the Tu Vi Chart repository
 final tuViChartRepositoryProvider = Provider<TuViChartRepository>((ref) {
@@ -98,3 +100,30 @@ final tuViChartProvider = FutureProvider.autoDispose
 
 /// Debug mode toggle
 final tuViDebugModeProvider = StateProvider<bool>((ref) => false);
+
+// ==================== Interpretation Providers ====================
+
+/// Provider for the Tu Vi Interpretation repository
+final tuViInterpretationRepositoryProvider =
+    Provider<TuViInterpretationRepository>((ref) {
+  final client = ref.watch(apiClientProvider);
+  return TuViInterpretationRepository(client);
+});
+
+/// Provider to generate interpretation from request.
+/// Note: This may take 30-60 seconds due to AI generation.
+final tuViInterpretationProvider = FutureProvider.autoDispose
+    .family<TuViInterpretationResponse, TuViChartRequest>((ref, request) async {
+  final repository = ref.read(tuViInterpretationRepositoryProvider);
+  return repository.generateInterpretation(request);
+});
+
+/// State provider for current interpretation being viewed
+final currentInterpretationProvider =
+    StateProvider<TuViInterpretationResponse?>((ref) => null);
+
+/// State provider for interpretation loading status
+final interpretationLoadingProvider = StateProvider<bool>((ref) => false);
+
+/// State provider for current tab index in interpretation screen
+final interpretationTabIndexProvider = StateProvider<int>((ref) => 0);

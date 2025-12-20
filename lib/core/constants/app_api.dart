@@ -38,4 +38,7 @@ class AppApi {
   // ==================== Tu Vi Chart Endpoints ====================
   /// POST /tuvi/chart
   static const String tuViChart = '/tuvi/chart';
+
+  /// POST /tuvi/chart/interpretation
+  static const String tuViInterpretation = '/tuvi/chart/interpretation';
 }

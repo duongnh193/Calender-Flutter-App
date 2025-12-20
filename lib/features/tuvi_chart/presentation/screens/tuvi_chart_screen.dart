@@ -10,6 +10,7 @@ import '../../domain/tuvi_chart_models.dart';
 import '../providers/tuvi_chart_providers.dart';
 import '../widgets/center_card.dart';
 import '../widgets/palace_card.dart';
+import 'tuvi_interpretation_screen.dart';
 
 /// Main screen for displaying Tu Vi Chart in a 4x4 grid layout.
 class TuViChartScreen extends ConsumerStatefulWidget {
@@ -28,7 +29,9 @@ class _TuViChartScreenState extends ConsumerState<TuViChartScreen> {
   String _selectedGender = 'female';
   bool _isLunar = false;
   bool _isLoading = false;
+  bool _isLoadingInterpretation = false;
   TuViChartResponse? _chartResult;
+  TuViChartRequest? _lastRequest;
   String? _errorMessage;
 
   @override
@@ -62,6 +65,7 @@ class _TuViChartScreenState extends ConsumerState<TuViChartScreen> {
       final result = await repository.generateChart(request);
       setState(() {
         _chartResult = result;
+        _lastRequest = request;
         _isLoading = false;
       });
     } catch (e) {
@@ -262,6 +266,46 @@ class _TuViChartScreenState extends ConsumerState<TuViChartScreen> {
     );
   }
 
+  Future<void> _viewInterpretation() async {
+    if (_lastRequest == null) return;
+
+    setState(() {
+      _isLoadingInterpretation = true;
+    });
+
+    try {
+      final repository = ref.read(tuViInterpretationRepositoryProvider);
+      final interpretation =
+          await repository.generateInterpretation(_lastRequest!);
+
+      if (mounted) {
+        setState(() {
+          _isLoadingInterpretation = false;
+        });
+
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => TuViInterpretationScreen(
+              interpretation: interpretation,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingInterpretation = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi tạo luận giải: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildChartView(
       TuViChartResponse chart, bool debugMode, ScreenSizeClass sizeClass) {
     return Column(
@@ -277,7 +321,10 @@ class _TuViChartScreenState extends ConsumerState<TuViChartScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => setState(() => _chartResult = null),
+                onPressed: () => setState(() {
+                  _chartResult = null;
+                  _lastRequest = null;
+                }),
               ),
               Expanded(
                 child: Text(
@@ -301,6 +348,45 @@ class _TuViChartScreenState extends ConsumerState<TuViChartScreen> {
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xs),
             child: _buildChartGrid(chart, debugMode),
+          ),
+        ),
+
+        // View Interpretation button
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.m),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                offset: const Offset(0, -2),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+          child: ElevatedButton.icon(
+            onPressed: _isLoadingInterpretation ? null : _viewInterpretation,
+            icon: _isLoadingInterpretation
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.auto_stories),
+            label: Text(
+              _isLoadingInterpretation
+                  ? 'Đang tạo luận giải...'
+                  : 'Xem Luận Giải Chi Tiết',
+            ),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            ),
           ),
         ),
 
