@@ -400,6 +400,26 @@ else
     log_warn "File RULES_MISSING_MENH_TAI_BACH.sql not found"
 fi
 
+# Step 16: Import final missing fragments
+if [ -f "${SCRIPT_DIR}/FRAGMENTS_MISSING_FINAL.sql" ]; then
+    log_info "Importing: FRAGMENTS_MISSING_FINAL.sql"
+    import_sql_file "${SCRIPT_DIR}/FRAGMENTS_MISSING_FINAL.sql"
+    FINAL_FRAGMENTS_COUNT=$($MYSQL_CMD -N -e "SELECT COUNT(*) FROM interpretation_fragments WHERE (fragment_code LIKE 'THIEN_CO_MENH_%' OR fragment_code LIKE 'THIEN_DONG_MENH_%' OR fragment_code LIKE 'THIEN_TUONG_MENH_%' OR fragment_code LIKE 'THAI_AM_MENH_%' OR fragment_code LIKE 'VU_KHUC_MENH_%' OR fragment_code LIKE 'CU_MON_MENH_%' OR fragment_code LIKE 'LIEM_TRINH_MENH_%' OR fragment_code LIKE 'THIEN_PHU_TAT_ACH_%' OR fragment_code LIKE 'THAT_SAT_TAI_BACH_%' OR fragment_code LIKE 'PHA_QUAN_TAI_BACH_%') AND fragment_code NOT LIKE '%_CHU_THAN_%'")
+    log_info "Imported ${FINAL_FRAGMENTS_COUNT} final missing fragments"
+else
+    log_warn "File FRAGMENTS_MISSING_FINAL.sql not found"
+fi
+
+# Step 17: Import final missing rules
+if [ -f "${SCRIPT_DIR}/RULES_MISSING_FINAL.sql" ]; then
+    log_info "Importing: RULES_MISSING_FINAL.sql"
+    import_sql_file "${SCRIPT_DIR}/RULES_MISSING_FINAL.sql"
+    FINAL_RULES_COUNT=$($MYSQL_CMD -N -e "SELECT COUNT(*) FROM interpretation_rules WHERE fragment_code LIKE 'THIEN_CO_MENH_%' OR fragment_code LIKE 'THIEN_DONG_MENH_%' OR fragment_code LIKE 'THIEN_TUONG_MENH_%' OR fragment_code LIKE 'THAI_AM_MENH_%' OR fragment_code LIKE 'VU_KHUC_MENH_%' OR fragment_code LIKE 'CU_MON_MENH_%' OR fragment_code LIKE 'LIEM_TRINH_MENH_%' OR fragment_code LIKE 'THIEN_PHU_TAT_ACH_%' OR fragment_code LIKE 'THAT_SAT_TAI_BACH_%' OR fragment_code LIKE 'PHA_QUAN_TAI_BACH_%'")
+    log_info "Imported ${FINAL_RULES_COUNT} final missing rules"
+else
+    log_warn "File RULES_MISSING_FINAL.sql not found"
+fi
+
 # Verify import
 log_info "Verifying import..."
 
