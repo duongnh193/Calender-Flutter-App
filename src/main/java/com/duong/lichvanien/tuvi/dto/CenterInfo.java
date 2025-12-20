@@ -96,6 +96,9 @@ public class CenterInfo {
     @Schema(description = "Chủ mệnh star", example = "Cự Môn")
     private String chuMenh;
 
+    @Schema(description = "Whether Cung Mệnh has no Chính tinh (special case - Mệnh vô Chính tinh)", example = "false")
+    private Boolean menhKhongChinhTinh;
+
     @Schema(description = "Chủ thân star", example = "Thiên Cơ")
     private String chuThan;
 

@@ -3,22 +3,27 @@ package com.duong.lichvanien.tuvi.service;
 import com.duong.lichvanien.tuvi.calculator.*;
 import com.duong.lichvanien.tuvi.dto.*;
 import com.duong.lichvanien.tuvi.enums.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Main service for generating Tu Vi (Purple Star Astrology) charts.
  * Orchestrates all calculators to produce a complete chart.
+ * Also saves FACT data to database for interpretation lookup.
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TuViChartService {
+
+    private final NatalChartService natalChartService;
 
     /**
      * Generate a complete Tu Vi chart from the request.
@@ -103,6 +108,9 @@ public class TuViChartService {
 
         // Step 7: Assign stars to palaces
         assignStarsToPalaces(palaceLayout.getPalaces(), allStarPositions);
+        
+        // Step 7.5: Calculate brightness for stars (after assignment)
+        calculateStarBrightness(palaceLayout.getPalaces());
 
         // Step 8: Calculate Trường Sinh labels for palaces
         Map<DiaChi, String> truongSinhLabels = TruongSinhCalculator.calculateAllStages(
@@ -139,14 +147,30 @@ public class TuViChartService {
             request, lunarDate, napAm, palaceLayout, isMale
         );
 
-        // Step 12: Build final response
-        return TuViChartResponse.builder()
+        // Step 12: Save FACT data to database
+        String chartHash = natalChartService.saveNatalChart(
+                TuViChartResponse.builder()
+                        .center(center)
+                        .palaces(palaceLayout.getPalaces())
+                        .markers(markers)
+                        .cycles(cycles)
+                        .build(),
+                request
+        );
+
+        // Step 13: Build final response (including chart hash for interpretation lookup)
+        TuViChartResponse response = TuViChartResponse.builder()
                 .center(center)
                 .palaces(palaceLayout.getPalaces())
                 .markers(markers)
                 .cycles(cycles)
                 .calculatedAt(ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
                 .build();
+
+        // Store chart hash in a transient field (or add to response DTO if needed)
+        // For now, the hash is saved in DB and can be retrieved when needed
+        
+        return response;
     }
 
     /**
@@ -192,6 +216,27 @@ public class TuViChartService {
     }
 
     /**
+     * Calculate brightness for stars in palaces.
+     * For now, sets default brightness "BINH" for all stars.
+     * TODO: Implement proper brightness calculation based on star position and palace.
+     */
+    private void calculateStarBrightness(List<PalaceInfo> palaces) {
+        for (PalaceInfo palace : palaces) {
+            if (palace.getStars() != null) {
+                for (StarInfo star : palace.getStars()) {
+                    // If brightness is not set, use default "BINH"
+                    if (star.getBrightness() == null || star.getBrightness().isBlank()) {
+                        star.setBrightness("BINH");
+                        star.setBrightnessCode("B");
+                        log.debug("Set default brightness BINH for star {} in palace {}", 
+                                star.getCode(), palace.getNameCode());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Build the center info section.
      */
     private CenterInfo buildCenterInfo(
@@ -213,6 +258,54 @@ public class TuViChartService {
 
         // Find Chủ Mệnh and Chủ Thân (simplified - main star in Mệnh/Thân palace)
         String chuMenh = findMainStarInPalace(palaceLayout.getPalaces(), CungName.MENH);
+        boolean menhKhongChinhTinh = false;
+        
+        if (chuMenh == null) {
+            // Cung Mệnh không có Chính tinh - áp dụng logic fallback theo Tử Vi học
+            menhKhongChinhTinh = true;
+            log.warn("Cung Mệnh không có Chính tinh (Mệnh vô Chính tinh). Áp dụng logic fallback theo Tử Vi học.");
+            
+            // Theo nguyên tắc Tử Vi học: Ưu tiên xem cung đối diện (Tài Bạch) hoặc cung Thân
+            // 1. Ưu tiên 1: Xem cung đối diện với Mệnh (cách 6 vị trí = Thiên Di, index 6)
+            chuMenh = findChinhTinhInPalace(palaceLayout.getPalaces(), CungName.THIEN_DI);
+            if (chuMenh != null) {
+                log.info("Tìm thấy Chủ mệnh từ cung đối diện (Thiên Di): {}", chuMenh);
+            } else {
+                // 2. Ưu tiên 2: Xem cung Tài Bạch (quan trọng đối với Mệnh)
+                chuMenh = findChinhTinhInPalace(palaceLayout.getPalaces(), CungName.TAI_BACH);
+                if (chuMenh != null) {
+                    log.info("Tìm thấy Chủ mệnh từ cung Tài Bạch: {}", chuMenh);
+                } else {
+                    // 3. Ưu tiên 3: Xem cung Thân
+                    if (palaceLayout.getThanCungName() != null) {
+                        chuMenh = findChinhTinhInPalace(palaceLayout.getPalaces(), palaceLayout.getThanCungName());
+                        if (chuMenh != null) {
+                            log.info("Tìm thấy Chủ mệnh từ cung Thân ({}): {}", 
+                                    palaceLayout.getThanCungName().getText(), chuMenh);
+                        }
+                    }
+                    
+                    // 4. Cuối cùng: Dùng sao đầu tiên trong Mệnh (nếu có)
+                    if (chuMenh == null) {
+                        for (PalaceInfo palace : palaceLayout.getPalaces()) {
+                            if ("MENH".equals(palace.getNameCode()) && palace.getStars() != null && !palace.getStars().isEmpty()) {
+                                chuMenh = palace.getStars().get(0).getName();
+                                log.warn("Dùng sao đầu tiên trong cung Mệnh làm Chủ mệnh fallback: {} (type: {})", 
+                                        chuMenh, palace.getStars().get(0).getType());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // If still null (Mệnh palace has no stars at all), set empty string
+            if (chuMenh == null) {
+                chuMenh = "";
+                log.error("Không thể xác định Chủ mệnh - Cung Mệnh và các cung liên quan đều không có Chính tinh hoặc sao!");
+            }
+        }
+        
         String chuThan = findMainStarInPalace(palaceLayout.getPalaces(), palaceLayout.getThanCungName());
 
         return CenterInfo.builder()
@@ -241,6 +334,7 @@ public class TuViChartService {
                 .cucNguHanh(palaceLayout.getCuc().getNguHanh().name())
                 .menhCucRelation(menhCucRelation)
                 .chuMenh(chuMenh)
+                .menhKhongChinhTinh(menhKhongChinhTinh)
                 .chuThan(chuThan)
                 .thanCu(palaceLayout.getThanCungName() != null ? palaceLayout.getThanCungName().getText() : null)
                 .build();
@@ -248,20 +342,75 @@ public class TuViChartService {
 
     /**
      * Find the main star (Chính tinh) in a palace.
+     * Returns the first Chính tinh found, or the first star if no Chính tinh exists (fallback).
      */
     private String findMainStarInPalace(List<PalaceInfo> palaces, CungName cungName) {
-        if (cungName == null) return null;
+        if (cungName == null) {
+            log.warn("findMainStarInPalace called with null cungName");
+            return null;
+        }
         
         for (PalaceInfo palace : palaces) {
             if (palace.getNameCode().equals(cungName.name())) {
-                if (palace.getStars() != null) {
-                    for (StarInfo star : palace.getStars()) {
-                        if ("CHINH_TINH".equals(star.getType())) {
-                            return star.getName();
-                        }
+                if (palace.getStars() == null || palace.getStars().isEmpty()) {
+                    log.warn("Palace {} has no stars!", cungName.name());
+                    return null;
+                }
+                
+                // First, try to find Chính tinh
+                for (StarInfo star : palace.getStars()) {
+                    if ("CHINH_TINH".equals(star.getType())) {
+                        log.debug("Found Chính tinh {} in palace {}", star.getName(), cungName.name());
+                        return star.getName();
                     }
                 }
-                break;
+                
+                // For Cung Mệnh, Chủ mệnh MUST be a Chính tinh - if not found, this is an error
+                if (cungName == CungName.MENH) {
+                    log.error("Cung Mệnh has no Chính tinh! This is a chart calculation error. Stars in Mệnh: {}", 
+                            palace.getStars().stream()
+                                    .map(s -> s.getCode() + "(" + s.getType() + ")")
+                                    .collect(Collectors.joining(", ")));
+                    // Return null instead of fallback - let the caller handle it
+                    return null;
+                }
+                
+                // For other palaces (like Thân), fallback to first star if no Chính tinh
+                StarInfo firstStar = palace.getStars().get(0);
+                log.warn("No Chính tinh found in palace {}, using first star: {} (type: {})", 
+                        cungName.name(), firstStar.getName(), firstStar.getType());
+                return firstStar.getName();
+            }
+        }
+        
+        log.warn("Palace {} not found in palaces list!", cungName.name());
+        return null;
+    }
+    
+    /**
+     * Find Chính tinh (main star) in a specific palace.
+     * Returns the first Chính tinh found, or null if none exists.
+     * This is a helper method for fallback logic when Cung Mệnh has no Chính tinh.
+     */
+    private String findChinhTinhInPalace(List<PalaceInfo> palaces, CungName cungName) {
+        if (cungName == null) {
+            return null;
+        }
+        
+        for (PalaceInfo palace : palaces) {
+            if (palace.getNameCode().equals(cungName.name())) {
+                if (palace.getStars() == null || palace.getStars().isEmpty()) {
+                    return null;
+                }
+                
+                // Find first Chính tinh
+                for (StarInfo star : palace.getStars()) {
+                    if ("CHINH_TINH".equals(star.getType())) {
+                        log.debug("Found Chính tinh {} in palace {} for fallback", star.getName(), cungName.name());
+                        return star.getName();
+                    }
+                }
+                return null;
             }
         }
         return null;

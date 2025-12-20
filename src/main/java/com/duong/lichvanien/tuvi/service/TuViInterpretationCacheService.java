@@ -6,7 +6,6 @@ import com.duong.lichvanien.tuvi.dto.interpretation.OverviewSection;
 import com.duong.lichvanien.tuvi.dto.interpretation.PalaceInterpretation;
 import com.duong.lichvanien.tuvi.dto.interpretation.TuViInterpretationResponse;
 import com.duong.lichvanien.tuvi.util.ChartHashGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,8 +91,10 @@ public class TuViInterpretationCacheService {
             redisTemplate.opsForValue().set(key, json, ttl);
             log.info("Cached interpretation hash: {} (TTL: {} hours)", hash, cacheConfig.getTtlHours());
 
-        } catch (JsonProcessingException e) {
-            log.warn("Error caching interpretation: {}", e.getMessage());
+        } catch (Exception e) {
+            // Gracefully handle Redis connection failures and other errors
+            // Log warning but don't fail the request
+            log.warn("Error caching interpretation (Redis may be unavailable): {}", e.getMessage());
         }
     }
 
@@ -161,8 +162,9 @@ public class TuViInterpretationCacheService {
             redisTemplate.opsForValue().set(key, json, ttl);
             log.debug("Cached overview hash: {}", sectionHash);
 
-        } catch (JsonProcessingException e) {
-            log.warn("Error caching overview: {}", e.getMessage());
+        } catch (Exception e) {
+            // Gracefully handle Redis connection failures and other errors
+            log.warn("Error caching overview (Redis may be unavailable): {}", e.getMessage());
         }
     }
 
@@ -235,8 +237,9 @@ public class TuViInterpretationCacheService {
             redisTemplate.opsForValue().set(key, json, ttl);
             log.debug("Cached palace {} hash: {}", palaceCode, sectionHash);
 
-        } catch (JsonProcessingException e) {
-            log.warn("Error caching palace {}: {}", palaceCode, e.getMessage());
+        } catch (Exception e) {
+            // Gracefully handle Redis connection failures and other errors
+            log.warn("Error caching palace {} (Redis may be unavailable): {}", palaceCode, e.getMessage());
         }
     }
 

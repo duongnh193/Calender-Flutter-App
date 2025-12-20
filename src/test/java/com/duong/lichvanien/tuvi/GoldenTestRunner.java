@@ -2,14 +2,15 @@ package com.duong.lichvanien.tuvi;
 
 import com.duong.lichvanien.tuvi.dto.TuViChartRequest;
 import com.duong.lichvanien.tuvi.dto.TuViChartResponse;
+import com.duong.lichvanien.tuvi.service.NatalChartService;
 import com.duong.lichvanien.tuvi.service.TuViChartService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mockito.Mockito;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -33,7 +34,9 @@ class GoldenTestRunner {
 
     @BeforeEach
     void setUp() {
-        service = new TuViChartService();
+        // Create mock NatalChartService for testing
+        NatalChartService natalChartService = Mockito.mock(NatalChartService.class);
+        service = new TuViChartService(natalChartService);
         objectMapper = new ObjectMapper();
     }
 
@@ -56,7 +59,7 @@ class GoldenTestRunner {
 
     private void runSingleTest(Resource resource) throws IOException {
         JsonNode fixture = objectMapper.readTree(resource.getInputStream());
-        String description = fixture.path("description").asText("No description");
+        // String description = fixture.path("description").asText("No description"); // Not used
 
         // Parse input
         JsonNode inputNode = fixture.path("input");
