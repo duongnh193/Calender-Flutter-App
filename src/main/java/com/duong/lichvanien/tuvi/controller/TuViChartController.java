@@ -2,7 +2,9 @@ package com.duong.lichvanien.tuvi.controller;
 
 import com.duong.lichvanien.tuvi.dto.TuViChartRequest;
 import com.duong.lichvanien.tuvi.dto.TuViChartResponse;
+import com.duong.lichvanien.tuvi.dto.interpretation.TuViInterpretationResponse;
 import com.duong.lichvanien.tuvi.service.TuViChartService;
+import com.duong.lichvanien.tuvi.service.TuViInterpretationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class TuViChartController {
 
     private final TuViChartService tuViChartService;
+    private final TuViInterpretationService tuViInterpretationService;
 
     @PostMapping("/chart")
     @Operation(
@@ -108,5 +111,94 @@ public class TuViChartController {
                 .build();
         
         return generateChart(request);
+    }
+
+    @PostMapping("/chart/interpretation")
+    @Operation(
+        summary = "Generate Tu Vi chart interpretation",
+        description = "Generate detailed AI-powered interpretation for a Tu Vi chart. " +
+                     "Returns comprehensive analysis for all 12 palaces plus overview section. " +
+                     "Note: This endpoint may take 30-60 seconds due to AI generation.",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Interpretation generated successfully",
+                content = @Content(schema = @Schema(implementation = TuViInterpretationResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "Invalid request parameters"
+            ),
+            @ApiResponse(
+                responseCode = "503",
+                description = "AI service unavailable"
+            )
+        }
+    )
+    public ResponseEntity<TuViInterpretationResponse> generateInterpretation(
+            @Valid @RequestBody TuViChartRequest request) {
+        
+        log.info("Received Tu Vi interpretation request for date={}, hour={}, gender={}",
+                request.getDate(), request.getHour(), request.getGender());
+        
+        TuViInterpretationResponse response = tuViInterpretationService.generateInterpretation(request);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/chart/interpretation")
+    @Operation(
+        summary = "Generate Tu Vi chart interpretation (GET)",
+        description = "Generate detailed AI-powered interpretation using query parameters. " +
+                     "Alternative to POST endpoint.",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Interpretation generated successfully",
+                content = @Content(schema = @Schema(implementation = TuViInterpretationResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "Invalid request parameters"
+            )
+        }
+    )
+    public ResponseEntity<TuViInterpretationResponse> generateInterpretationGet(
+            @Parameter(description = "Birth date (yyyy-MM-dd)", example = "1995-03-02", required = true)
+            @RequestParam String date,
+            
+            @Parameter(description = "Birth hour (0-23)", example = "8", required = true)
+            @RequestParam Integer hour,
+            
+            @Parameter(description = "Birth minute (0-59)", example = "30")
+            @RequestParam(defaultValue = "0") Integer minute,
+            
+            @Parameter(description = "Gender (male/female)", example = "female", required = true)
+            @RequestParam String gender,
+            
+            @Parameter(description = "Is lunar date", example = "false")
+            @RequestParam(defaultValue = "false") Boolean isLunar,
+            
+            @Parameter(description = "Is leap month (only for lunar dates)")
+            @RequestParam(defaultValue = "false") Boolean isLeapMonth,
+            
+            @Parameter(description = "Name (required for interpretation)")
+            @RequestParam String name,
+            
+            @Parameter(description = "Birth place (optional)")
+            @RequestParam(required = false) String birthPlace) {
+        
+        TuViChartRequest request = TuViChartRequest.builder()
+                .date(date)
+                .hour(hour)
+                .minute(minute)
+                .gender(gender)
+                .isLunar(isLunar)
+                .isLeapMonth(isLeapMonth)
+                .name(name)
+                .birthPlace(birthPlace)
+                .build();
+        
+        return generateInterpretation(request);
     }
 }

@@ -66,10 +66,26 @@ app:
     gen-start-year: 1900
     gen-end-year: 2100
 
+# Tu Vi AI Interpretation configuration
+tuvi:
+  ai:
+    provider: ${TUVI_AI_PROVIDER:openai}
+    model: ${TUVI_AI_MODEL:gpt-4}
+    api-key: ${OPENAI_API_KEY:}
+    anthropic-api-key: ${ANTHROPIC_API_KEY:}
+    max-tokens: 4000
+    temperature: 0.7
+    timeout-seconds: 120
+  cache:
+    enabled: ${TUVI_CACHE_ENABLED:true}
+    ttl-hours: 720  # 30 days default
+    prefix: "tuvi:interpretation:"
+
 # Logging configuration
 logging:
   level:
     com.duong.lichvanien.horoscope: INFO
+    com.duong.lichvanien.tuvi: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
