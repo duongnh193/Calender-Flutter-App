@@ -90,6 +90,7 @@ class CenterInfo {
   final String cucNguHanh;
   final String? menhCucRelation;
   final String? chuMenh;
+  final bool? menhKhongChinhTinh;
   final String? chuThan;
   final String? canLuong;
   final String? laiNhan;
@@ -122,6 +123,7 @@ class CenterInfo {
     required this.cucNguHanh,
     this.menhCucRelation,
     this.chuMenh,
+    this.menhKhongChinhTinh,
     this.chuThan,
     this.canLuong,
     this.laiNhan,
@@ -156,6 +158,7 @@ class CenterInfo {
       cucNguHanh: json['cucNguHanh'] as String? ?? '',
       menhCucRelation: json['menhCucRelation'] as String?,
       chuMenh: json['chuMenh'] as String?,
+      menhKhongChinhTinh: json['menhKhongChinhTinh'] as bool?,
       chuThan: json['chuThan'] as String?,
       canLuong: json['canLuong'] as String?,
       laiNhan: json['laiNhan'] as String?,
