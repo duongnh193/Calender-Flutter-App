@@ -1,0 +1,47 @@
+Hãy viết phần LUẬN GIẢI TỔNG QUAN cho lá số tử vi với thông tin sau:
+
+=== THÔNG TIN CƠ BẢN ===
+- Họ tên: {name}
+- Giới tính: {gender}
+- Ngày sinh dương lịch: {solarDate}
+- Ngày sinh âm lịch: {lunarDate}
+- Giờ sinh: {birthHour} giờ ({birthHourCanChi})
+- Năm sinh Can Chi: {yearCanChi}
+- Âm dương: {amDuong}
+- Thuận/Nghịch: {thuanNghich}
+
+=== BẢN MỆNH ===
+- Nạp Âm: {banMenh}
+- Ngũ hành: {banMenhNguHanh}
+- Mô tả: {banMenhDescription}
+
+=== CỤC MỆNH ===
+- Cục: {cuc}
+- Giá trị: {cucValue}
+- Ngũ hành Cục: {cucNguHanh}
+- Quan hệ Mệnh-Cục: {menhCucRelation}
+
+=== CHỦ MỆNH VÀ CHỦ THÂN ===
+- Chủ mệnh (sao chính tại cung Mệnh): {chuMenh}
+- Chủ thân (sao chính tại cung có Thân cư): {chuThan}
+- Thân cư: {thanCu}
+- Thân Mệnh đồng cung: {thanMenhDongCung}
+
+=== YÊU CẦU VIẾT ===
+Viết 7 phần luận giải tổng quan, mỗi phần là một đoạn văn chi tiết (ít nhất 150 từ):
+
+1. **Bản mệnh của bạn**: Luận về Nạp Âm {banMenh} thuộc hành {banMenhNguHanh}. Giải thích ý nghĩa của ngũ hành này đối với tính cách, sức khỏe, và vận mệnh tổng quát của người này.
+
+2. **Cục mệnh của bạn**: Luận về {cuc} và mối quan hệ với Bản mệnh ({menhCucRelation}). Giải thích cục này ảnh hưởng thế nào đến hành trình cuộc đời và cách hóa giải nếu có khắc.
+
+3. **Chủ mệnh của bạn**: Luận về sao {chuMenh} làm chủ cung Mệnh. Sao này cho biết điều gì về tính cách cốt lõi, định hướng cuộc đời và tiềm năng của người này.
+
+4. **Chủ thân của bạn**: Luận về sao {chuThan} làm chủ thân. Giải thích sao này ảnh hưởng thế nào đến phần "thể xác" và hoạt động thực tế trong cuộc sống.
+
+5. **Lai nhân (Thân cư)**: Luận về việc Thân cư tại {thanCu}. Giải thích ý nghĩa của vị trí này và nó cho biết gì về phương hướng phát triển của người này.
+
+6. **Âm dương Thuận Nghịch**: Luận về {thuanNghich}. Giải thích chiều hướng vận động của lá số là thuận hay nghịch và ảnh hưởng của nó.
+
+7. **Tổng kết**: Đưa ra nhận định tổng quan về lá số này, điểm mạnh, điểm cần lưu ý, và lời khuyên chung cho cuộc đời.
+
+Viết mỗi phần thành một đoạn văn hoàn chỉnh, tự nhiên, không đánh số hay bullet points.
