@@ -38,6 +38,6 @@ public class TuViStarInterpretationEntity {
     @Column(name = "interpretation", columnDefinition = "TEXT")
     private String interpretation;
 
-    @Column(name = "summary", length = 512)
+    @Column(name = "summary", columnDefinition = "TEXT")
     private String summary;
 }
