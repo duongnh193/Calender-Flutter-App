@@ -84,25 +84,24 @@ class PalaceInterpretationCard extends StatelessWidget {
           ),
         ),
         children: [
-          _buildContentSection(
-            context,
-            title: 'Tóm tắt',
-            content: interpretation.summary,
-            icon: Icons.summarize_outlined,
-          ),
-          const Divider(height: 24),
-          _buildContentSection(
-            context,
-            title: 'Giới thiệu',
-            content: interpretation.introduction,
-            icon: Icons.info_outline,
-          ),
-          if (interpretation.detailedAnalysis != null &&
-              interpretation.detailedAnalysis!.isNotEmpty) ...[
-            const Divider(height: 24),
+          // Phần Giới thiệu
+          if (interpretation.introduction != null &&
+              interpretation.introduction!.isNotEmpty)
             _buildContentSection(
               context,
-              title: 'Phân tích chi tiết',
+              title: 'Giới thiệu',
+              content: interpretation.introduction,
+              icon: Icons.info_outline,
+            ),
+          // Phần Giải luận chi tiết (đã loại bỏ phần giới thiệu trùng lặp)
+          if (interpretation.detailedAnalysis != null &&
+              interpretation.detailedAnalysis!.isNotEmpty) ...[
+            if (interpretation.introduction != null &&
+                interpretation.introduction!.isNotEmpty)
+              const Divider(height: 24),
+            _buildContentSection(
+              context,
+              title: 'Giải luận chi tiết',
               content: interpretation.detailedAnalysis,
               icon: Icons.analytics_outlined,
             ),
