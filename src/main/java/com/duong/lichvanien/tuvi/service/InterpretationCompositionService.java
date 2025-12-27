@@ -4,6 +4,7 @@ import com.duong.lichvanien.tuvi.dto.CenterInfo;
 import com.duong.lichvanien.tuvi.dto.PalaceInfo;
 import com.duong.lichvanien.tuvi.dto.StarInfo;
 import com.duong.lichvanien.tuvi.dto.TuViChartResponse;
+import com.duong.lichvanien.tuvi.dto.essay.PalaceEssay;
 import com.duong.lichvanien.tuvi.dto.interpretation.OverviewSection;
 import com.duong.lichvanien.tuvi.dto.interpretation.PalaceInterpretation;
 import com.duong.lichvanien.tuvi.dto.interpretation.StarInterpretation;
@@ -11,7 +12,6 @@ import com.duong.lichvanien.tuvi.dto.interpretation.TuViInterpretationResponse;
 import com.duong.lichvanien.tuvi.entity.InterpretationFragmentEntity;
 import com.duong.lichvanien.tuvi.enums.CungName;
 import com.duong.lichvanien.tuvi.enums.Star;
-import com.duong.lichvanien.tuvi.repository.InterpretationFragmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +31,8 @@ import java.util.stream.Collectors;
 public class InterpretationCompositionService {
 
     private final InterpretationRuleMatchingService ruleMatchingService;
-    private final InterpretationFragmentRepository fragmentRepository;
+    private final PalaceEssayCompositionService palaceEssayCompositionService;
+    private final OverviewEssayCompositionService overviewEssayCompositionService;
 
     /**
      * Generate interpretation response from chart using rule-based fragments.
@@ -92,87 +92,62 @@ public class InterpretationCompositionService {
     }
 
     /**
-     * Generate overview section from fragments.
+     * Generate overview section using OverviewEssayCompositionService.
+     * Áp dụng quy tắc văn phong mới: học thuật nhưng dễ đọc, không tiêu cực, không lời khuyên.
      */
     private OverviewSection generateOverviewFromFragments(TuViChartResponse chart, String gender) {
-        // For now, generate simple overview based on Mệnh palace
-        PalaceInfo menhPalace = findPalace(chart, CungName.MENH);
-        if (menhPalace == null) {
-            return OverviewSection.builder()
-                    .overallSummary("Chưa có thông tin giải luận.")
-                    .build();
-        }
-
-        List<InterpretationFragmentEntity> fragments = ruleMatchingService.matchRulesForPalace(menhPalace);
-        
-        // Compose overview from fragments
-        String overviewText = fragments.stream()
-                .limit(3) // Take top 3 highest priority fragments
-                .map(InterpretationFragmentEntity::getContent)
-                .collect(Collectors.joining(" "));
-
         // Get chart center info for additional fields
         CenterInfo center = chart.getCenter();
         if (center == null) {
             return OverviewSection.builder()
-                    .overallSummary(overviewText.isEmpty() ? "Chưa có thông tin giải luận." : overviewText)
+                    .overallSummary("Lá số phản ánh một cấu trúc độc đáo với những tiềm năng riêng biệt.")
                     .build();
         }
 
         // Check if Thân is in the same palace as Mệnh
         boolean thanMenhDongCung = false;
+        PalaceInfo thanPalace = null;
         if (chart.getPalaces() != null) {
-            PalaceInfo thanPalace = chart.getPalaces().stream()
-                    .filter(p -> p.isThanCu())
+            thanPalace = chart.getPalaces().stream()
+                    .filter(PalaceInfo::isThanCu)
                     .findFirst()
                     .orElse(null);
             thanMenhDongCung = thanPalace != null && "MENH".equals(thanPalace.getNameCode());
         }
 
-        // Match overview-level fragments from CenterInfo
-        List<InterpretationFragmentEntity> overviewFragments = ruleMatchingService.matchOverviewRules(center, thanMenhDongCung);
+        // Get brightness of Chủ mệnh from Mệnh palace
+        String chuMenhBrightness = getChuMenhBrightness(chart, center.getChuMenh());
         
-        // Group fragments by type for different interpretation fields
-        Map<String, List<InterpretationFragmentEntity>> fragmentsByType = overviewFragments.stream()
-                .collect(Collectors.groupingBy(f -> {
-                    String code = f.getFragmentCode();
-                    if (code.startsWith("BAN_MENH_")) return "BAN_MENH";
-                    if (code.startsWith("CUC_")) return "CUC";
-                    if (code.startsWith("THUAN_") || code.startsWith("NGHICH_")) return "THUAN_NGHICH";
-                    if (code.startsWith("THAN_")) return "THAN_CU";
-                    return "OTHER";
-                }));
+        // Get brightness of Chủ thân from Thân palace
+        String chuThanBrightness = getChuThanBrightness(thanPalace, center.getChuThan());
+
+        // Generate interpretations using OverviewEssayCompositionService
+        String chuMenhInterpretation = overviewEssayCompositionService.composeChuMenhInterpretation(
+                center.getChuMenh(), 
+                chuMenhBrightness, 
+                Boolean.TRUE.equals(center.getMenhKhongChinhTinh()));
         
-        // Compose interpretation texts from fragments
-        String banMenhInterpretation = fragmentsByType.getOrDefault("BAN_MENH", List.of()).stream()
-                .map(InterpretationFragmentEntity::getContent)
-                .collect(Collectors.joining(" "));
-                
-        String cucInterpretation = fragmentsByType.getOrDefault("CUC", List.of()).stream()
-                .map(InterpretationFragmentEntity::getContent)
-                .collect(Collectors.joining(" "));
-                
-        String thuanNghichInterpretation = fragmentsByType.getOrDefault("THUAN_NGHICH", List.of()).stream()
-                .map(InterpretationFragmentEntity::getContent)
-                .collect(Collectors.joining(" "));
-                
-        String laiNhanInterpretation = fragmentsByType.getOrDefault("THAN_CU", List.of()).stream()
-                .map(InterpretationFragmentEntity::getContent)
-                .collect(Collectors.joining(" "));
+        String chuThanInterpretation = overviewEssayCompositionService.composeChuThanInterpretation(
+                center.getChuThan(), 
+                chuThanBrightness);
         
-        // Generate Chủ Mệnh interpretation from star fragments in Mệnh palace
-        String chuMenhInterpretation = generateChuMenhInterpretation(chart, center.getChuMenh());
+        String banMenhInterpretation = overviewEssayCompositionService.composeBanMenhInterpretation(
+                center.getBanMenh(), 
+                center.getBanMenhNguHanh());
         
-        // If Cung Mệnh không có Chính tinh, thêm note đặc biệt vào interpretation
-        if (Boolean.TRUE.equals(center.getMenhKhongChinhTinh()) && !chuMenhInterpretation.isEmpty()) {
-            chuMenhInterpretation = "Lá số có đặc điểm: Cung Mệnh không có Chính tinh (Mệnh vô Chính tinh). " +
-                    "Chủ mệnh được xác định từ cung đối diện hoặc cung Thân theo nguyên tắc Tử Vi học. " +
-                    chuMenhInterpretation;
-            log.info("Added special note for menhKhongChinhTinh case to chuMenhInterpretation");
-        }
+        String cucInterpretation = overviewEssayCompositionService.composeCucInterpretation(
+                center.getCuc(), 
+                center.getCucValue(), 
+                center.getMenhCucRelation());
         
-        // Generate Chủ Thân interpretation from star fragments in Thân palace
-        String chuThanInterpretation = generateChuThanInterpretation(chart, center.getChuThan());
+        String thuanNghichInterpretation = overviewEssayCompositionService.composeThuanNghichInterpretation(
+                center.getThuanNghich());
+        
+        String thanCuInterpretation = overviewEssayCompositionService.composeThanCuInterpretation(
+                center.getThanCu(), 
+                thanMenhDongCung);
+        
+        String overallSummary = overviewEssayCompositionService.composeOverallSummary(center, chart);
         
         return OverviewSection.builder()
                 // Bản mệnh
@@ -193,18 +168,64 @@ public class InterpretationCompositionService {
                 // Lai nhân (Thân cư)
                 .thanCu(center.getThanCu())
                 .thanMenhDongCung(thanMenhDongCung)
-                .laiNhanInterpretation(laiNhanInterpretation.isEmpty() ? null : laiNhanInterpretation)
-                .thanCuInterpretation(laiNhanInterpretation.isEmpty() ? null : laiNhanInterpretation)
+                .laiNhanInterpretation(thanCuInterpretation.isEmpty() ? null : thanCuInterpretation)
+                .thanCuInterpretation(thanCuInterpretation.isEmpty() ? null : thanCuInterpretation)
                 // Âm Dương / Thuận Nghịch
                 .thuanNghich(center.getThuanNghich())
                 .thuanNghichInterpretation(thuanNghichInterpretation.isEmpty() ? null : thuanNghichInterpretation)
                 // Overall summary
-                .overallSummary(overviewText.isEmpty() ? "Chưa có thông tin giải luận." : overviewText)
+                .overallSummary(overallSummary)
                 .build();
     }
 
     /**
+     * Get brightness of Chủ mệnh from Mệnh palace.
+     */
+    private String getChuMenhBrightness(TuViChartResponse chart, String chuMenh) {
+        if (chuMenh == null || chart.getPalaces() == null) {
+            return null;
+        }
+        
+        String starCode = convertStarNameToCode(chuMenh);
+        if (starCode == null) {
+            return null;
+        }
+        
+        PalaceInfo menhPalace = findPalace(chart, CungName.MENH);
+        if (menhPalace == null || menhPalace.getStars() == null) {
+            return null;
+        }
+        
+        return menhPalace.getStars().stream()
+                .filter(s -> starCode.equals(s.getCode()))
+                .map(StarInfo::getBrightness)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Get brightness of Chủ thân from Thân palace.
+     */
+    private String getChuThanBrightness(PalaceInfo thanPalace, String chuThan) {
+        if (chuThan == null || thanPalace == null || thanPalace.getStars() == null) {
+            return null;
+        }
+        
+        String starCode = convertStarNameToCode(chuThan);
+        if (starCode == null) {
+            return null;
+        }
+        
+        return thanPalace.getStars().stream()
+                .filter(s -> starCode.equals(s.getCode()))
+                .map(StarInfo::getBrightness)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
      * Generate palace interpretation from fragments.
+     * Uses PalaceEssayCompositionService to generate a complete essay (800-1000 words).
      */
     private PalaceInterpretation generatePalaceInterpretation(TuViChartResponse chart, CungName palaceName) {
         PalaceInfo palace = findPalace(chart, palaceName);
@@ -214,6 +235,51 @@ public class InterpretationCompositionService {
 
         List<InterpretationFragmentEntity> fragments = ruleMatchingService.matchRulesForPalace(palace);
 
+        // Generate full essay using PalaceEssayCompositionService
+        PalaceEssay essay = palaceEssayCompositionService.composeFullEssay(palace, fragments, chart);
+
+        // Build star analyses from fragments and palace stars
+        List<StarInterpretation> starAnalyses = buildStarAnalyses(palace, fragments);
+
+        // Use essay summary as the short summary
+        String summary = essay.getSummary();
+        if (summary == null || summary.isBlank()) {
+            // Fallback to old logic if essay summary is empty
+            summary = buildFallbackSummary(palace, fragments, starAnalyses);
+        }
+
+        // Use essay fullEssay as detailedAnalysis
+        String detailedAnalysis = essay.getFullEssay();
+
+        // Extract sections for structured fields
+        Map<String, String> sections = essay.getSections();
+        String introduction = sections != null ? sections.get("introduction") : null;
+        String conclusion = sections != null ? sections.get("conclusion") : null;
+
+        return PalaceInterpretation.builder()
+                .palaceCode(palace.getNameCode())
+                .palaceName(palace.getName())
+                .palaceChi(palace.getDiaChi())
+                .canChiPrefix(palace.getCanChiPrefix())
+                .summary(summary)
+                .introduction(introduction)
+                .detailedAnalysis(detailedAnalysis.isEmpty() ? null : detailedAnalysis.trim())
+                .genderAnalysis(null) // Can be added based on gender modifiers
+                .starAnalyses(starAnalyses.isEmpty() ? null : starAnalyses)
+                .hasTuan(palace.isHasTuan())
+                .hasTriet(palace.isHasTriet())
+                .tuanTrietEffect(generateTuanTrietEffect(fragments))
+                .adviceSection(null) // Removed - following no-advice principle
+                .conclusion(conclusion)
+                .build();
+    }
+
+    /**
+     * Build fallback summary when essay summary is empty.
+     */
+    private String buildFallbackSummary(PalaceInfo palace, 
+                                        List<InterpretationFragmentEntity> fragments,
+                                        List<StarInterpretation> starAnalyses) {
         // Compose interpretation sections from fragments
         List<String> positiveFragments = new ArrayList<>();
         List<String> neutralFragments = new ArrayList<>();
@@ -227,9 +293,6 @@ public class InterpretationCompositionService {
             }
         }
 
-        // Build star analyses from fragments and palace stars
-        List<StarInterpretation> starAnalyses = buildStarAnalyses(palace, fragments);
-
         // Check if palace has no Chính tinh (only has PHU_TINH or TRUONG_SINH)
         boolean hasChinhTinh = palace.getStars() != null && palace.getStars().stream()
                 .anyMatch(s -> "CHINH_TINH".equals(s.getType()));
@@ -239,7 +302,6 @@ public class InterpretationCompositionService {
                     .allMatch(s -> "PHU_TINH".equals(s.getType()) || "TRUONG_SINH".equals(s.getType()));
 
         // Build interpretation sections with fallback logic
-        // Priority: positive > neutral > negative > starAnalyses > fallback note for no Chính tinh
         String summary;
         if (!positiveFragments.isEmpty()) {
             summary = String.join(" ", positiveFragments.subList(0, Math.min(2, positiveFragments.size())));
@@ -248,59 +310,15 @@ public class InterpretationCompositionService {
         } else if (!negativeFragments.isEmpty()) {
             summary = String.join(" ", negativeFragments.subList(0, Math.min(2, negativeFragments.size())));
         } else if (!starAnalyses.isEmpty()) {
-            // Use first star's interpretation as summary
             summary = starAnalyses.get(0).getSummary();
         } else if (hasOnlyPhuTinhOrTruongSinh) {
-            // Special case: Palace has no Chính tinh, only phụ tinh or Trường Sinh
-            // These stars are modifiers and don't have dedicated interpretation fragments
             summary = "Cung này không có Chính tinh, chỉ có phụ tinh hoặc Trường Sinh. " +
-                     "Các sao này có vai trò hỗ trợ và bổ trợ, không có giải luận riêng biệt theo từng sao. " +
-                     "Việc giải luận chủ yếu dựa vào Chính tinh trong cung, do đó cung này cần xem xét trong tổng thể lá số.";
+                     "Các sao này có vai trò hỗ trợ và bổ trợ, cần xem xét trong tổng thể lá số.";
         } else {
             summary = "Chưa có thông tin giải luận.";
         }
-
-        String detailedAnalysis = String.join(" ", 
-                positiveFragments.size() > 2 ? positiveFragments.subList(2, positiveFragments.size()) : List.of());
-
-        if (!neutralFragments.isEmpty()) {
-            if (!positiveFragments.isEmpty()) {
-                // Only add neutral if we already have positive
-                detailedAnalysis += " " + String.join(" ", neutralFragments);
-            } else {
-                // If no positive, add neutral beyond first 2 (already used in summary)
-                detailedAnalysis += " " + String.join(" ", 
-                        neutralFragments.size() > 2 ? neutralFragments.subList(2, neutralFragments.size()) : List.of());
-            }
-        }
-
-        if (!negativeFragments.isEmpty()) {
-            if (!positiveFragments.isEmpty() || !neutralFragments.isEmpty()) {
-                // Only add negative if we have positive or neutral
-                detailedAnalysis += " " + String.join(" ", negativeFragments);
-            } else {
-                // If no positive/neutral, add negative beyond first 2 (already used in summary)
-                detailedAnalysis += " " + String.join(" ", 
-                        negativeFragments.size() > 2 ? negativeFragments.subList(2, negativeFragments.size()) : List.of());
-            }
-        }
-
-        return PalaceInterpretation.builder()
-                .palaceCode(palace.getNameCode())
-                .palaceName(palace.getName())
-                .palaceChi(palace.getDiaChi())
-                .canChiPrefix(palace.getCanChiPrefix())
-                .summary(summary)
-                .introduction(null) // Can be generated separately
-                .detailedAnalysis(detailedAnalysis.isEmpty() ? null : detailedAnalysis.trim())
-                .genderAnalysis(null) // Can be added based on gender modifiers
-                .starAnalyses(starAnalyses.isEmpty() ? null : starAnalyses)
-                .hasTuan(palace.isHasTuan())
-                .hasTriet(palace.isHasTriet())
-                .tuanTrietEffect(generateTuanTrietEffect(fragments))
-                .adviceSection(null) // Can be generated from fragments
-                .conclusion(null) // Can be generated from fragments
-                .build();
+        
+        return summary;
     }
 
     /**
@@ -362,92 +380,6 @@ public class InterpretationCompositionService {
         return starAnalyses;
     }
 
-    /**
-     * Generate Chủ Mệnh interpretation from dedicated CHU_MENH fragments.
-     * Fragment code format: CHU_MENH_{STAR_CODE} (e.g., "CHU_MENH_THIEN_CO", "CHU_MENH_THAI_AM")
-     */
-    private String generateChuMenhInterpretation(TuViChartResponse chart, String chuMenh) {
-        if (chuMenh == null || chuMenh.isBlank()) {
-            return "";
-        }
-        
-        // Convert Vietnamese star name to star code (e.g., "Thiên Cơ" -> "THIEN_CO")
-        String starCode = convertStarNameToCode(chuMenh);
-        if (starCode == null) {
-            log.warn("Could not convert Chủ mệnh star name to code: {}", chuMenh);
-            return "";
-        }
-        
-        // Look up fragment with format: CHU_MENH_{STAR_CODE}
-        String fragmentCode = "CHU_MENH_" + starCode;
-        Optional<InterpretationFragmentEntity> fragment = fragmentRepository.findByFragmentCode(fragmentCode);
-        
-        if (fragment.isPresent()) {
-            log.debug("Found CHU_MENH fragment for star: {} (code: {})", chuMenh, starCode);
-            return fragment.get().getContent();
-        }
-        
-        log.debug("No CHU_MENH fragment found for star: {} (code: {})", chuMenh, starCode);
-        return "";
-    }
-    
-    /**
-     * Generate Chủ Thân interpretation from dedicated CHU_THAN fragments.
-     * Fragment code format: {STAR_CODE}_CHU_THAN_{BRIGHTNESS} (e.g., "THAI_AM_CHU_THAN_MIEU", "THIEN_CO_CHU_THAN_BINH")
-     * Falls back to old format CHU_THAN_{STAR_CODE} for backward compatibility.
-     */
-    private String generateChuThanInterpretation(TuViChartResponse chart, String chuThan) {
-        if (chuThan == null || chuThan.isBlank()) {
-            return "";
-        }
-        
-        // Convert Vietnamese star name to star code (e.g., "Thái Âm" -> "THAI_AM")
-        String starCode = convertStarNameToCode(chuThan);
-        if (starCode == null) {
-            log.warn("Could not convert Chủ thân star name to code: {}", chuThan);
-            return "";
-        }
-        
-        // Try to get brightness from Thân palace
-        String brightness = "BINH"; // Default brightness
-        PalaceInfo thanPalace = chart.getPalaces() != null ? chart.getPalaces().stream()
-                .filter(p -> p.isThanCu())
-                .findFirst()
-                .orElse(null) : null;
-        
-        if (thanPalace != null && thanPalace.getStars() != null) {
-            // Find the star matching chuThan and get its brightness
-            for (StarInfo star : thanPalace.getStars()) {
-                if (starCode.equals(star.getCode())) {
-                    brightness = star.getBrightness() != null && !star.getBrightness().isBlank() 
-                            ? star.getBrightness() 
-                            : "BINH";
-                    break;
-                }
-            }
-        }
-        
-        // Try new format first: {STAR_CODE}_CHU_THAN_{BRIGHTNESS}
-        String fragmentCode = starCode + "_CHU_THAN_" + brightness;
-        Optional<InterpretationFragmentEntity> fragment = fragmentRepository.findByFragmentCode(fragmentCode);
-        
-        if (fragment.isPresent()) {
-            log.debug("Found CHU_THAN fragment for star: {} (code: {}, brightness: {})", chuThan, starCode, brightness);
-            return fragment.get().getContent();
-        }
-        
-        // Fallback to old format: CHU_THAN_{STAR_CODE} for backward compatibility
-        fragmentCode = "CHU_THAN_" + starCode;
-        fragment = fragmentRepository.findByFragmentCode(fragmentCode);
-        if (fragment.isPresent()) {
-            log.debug("Found CHU_THAN fragment (old format) for star: {} (code: {})", chuThan, starCode);
-            return fragment.get().getContent();
-        }
-        
-        log.debug("No CHU_THAN fragment found for star: {} (code: {}, brightness: {})", chuThan, starCode, brightness);
-        return "";
-    }
-    
     /**
      * Convert Vietnamese star name to star code (enum name).
      * Example: "Thiên Cơ" -> "THIEN_CO", "Thái Âm" -> "THAI_AM"
