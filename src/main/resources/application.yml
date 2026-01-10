@@ -67,6 +67,33 @@ app:
     gen-start-year: 1900
     gen-end-year: 2100
 
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:lich-van-nien-secret-key-change-in-production-256-bits-minimum}
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION:3600000}  # 1 hour
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7 days
+  issuer: lich-van-nien
+  audience: lich-van-nien-app
+
+# SePay Configuration
+sepay:
+  api-key: ${SEPAY_API_KEY:}
+  bank-account: ${SEPAY_BANK_ACCOUNT:}
+  bank-name: ${SEPAY_BANK_NAME:}
+  account-name: ${SEPAY_ACCOUNT_NAME:}
+  webhook-secret: ${SEPAY_WEBHOOK_SECRET:}
+  content-prefix: ${SEPAY_CONTENT_PREFIX:}
+
+
+# Grok AI Configuration
+grok:
+  api:
+    key: ${GROK_API_KEY:}
+    base-url: ${GROK_API_BASE_URL:https://api.x.ai/v1}
+    model: ${GROK_API_MODEL:grok-beta}
+    timeout-seconds: ${GROK_API_TIMEOUT:120}
+    max-tokens: ${GROK_API_MAX_TOKENS:4000}
+    temperature: ${GROK_API_TEMPERATURE:0.7}
 
 # Logging configuration
 logging:

@@ -22,6 +22,7 @@ openai.env
 !.env.example
 
 ./db/*.md
+*.md
 
 # Python scripts
 *.py

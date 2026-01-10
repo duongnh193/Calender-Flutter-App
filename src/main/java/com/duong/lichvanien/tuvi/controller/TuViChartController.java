@@ -5,12 +5,19 @@ import com.duong.lichvanien.tuvi.dto.TuViChartResponse;
 import com.duong.lichvanien.tuvi.dto.interpretation.TuViInterpretationResponse;
 import com.duong.lichvanien.tuvi.service.TuViChartService;
 import com.duong.lichvanien.tuvi.service.TuViInterpretationService;
+import com.duong.lichvanien.affiliate.service.AffiliateService;
+import com.duong.lichvanien.common.security.SecurityUtils;
+import com.duong.lichvanien.user.dto.PaymentCheckResponse;
+import com.duong.lichvanien.user.interceptor.FingerprintInterceptor;
+import com.duong.lichvanien.user.service.PaymentService;
+import com.duong.lichvanien.xu.service.XuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +36,9 @@ public class TuViChartController {
 
     private final TuViChartService tuViChartService;
     private final TuViInterpretationService tuViInterpretationService;
+    private final PaymentService paymentService;
+    private final XuService xuService;
+    private final AffiliateService affiliateService;
 
     @PostMapping("/chart")
     @Operation(
@@ -118,7 +128,8 @@ public class TuViChartController {
         summary = "Generate Tu Vi chart interpretation",
         description = "Generate detailed AI-powered interpretation for a Tu Vi chart. " +
                      "Returns comprehensive analysis for all 12 palaces plus overview section. " +
-                     "Note: This endpoint may take 30-60 seconds due to AI generation.",
+                     "Note: This endpoint may take 30-60 seconds due to AI generation. " +
+                     "Payment is required for this endpoint.",
         responses = {
             @ApiResponse(
                 responseCode = "200",
@@ -128,6 +139,10 @@ public class TuViChartController {
             @ApiResponse(
                 responseCode = "400",
                 description = "Invalid request parameters"
+            ),
+            @ApiResponse(
+                responseCode = "402",
+                description = "Payment required"
             ),
             @ApiResponse(
                 responseCode = "503",
@@ -136,12 +151,78 @@ public class TuViChartController {
         }
     )
     public ResponseEntity<TuViInterpretationResponse> generateInterpretation(
-            @Valid @RequestBody TuViChartRequest request) {
+            @Valid @RequestBody TuViChartRequest request,
+            HttpServletRequest httpRequest) {
         
         log.info("Received Tu Vi interpretation request for date={}, hour={}, gender={}",
                 request.getDate(), request.getHour(), request.getGender());
         
+        // Generate chart first to get chart hash
+        TuViChartResponse chartResponse = tuViChartService.generateChart(request);
+        String chartHash = chartResponse.getChartHash();
+        
+        // Get fingerprint ID from request
+        String fingerprintId = FingerprintInterceptor.getFingerprintId(httpRequest);
+        
+        // Check payment - try xu first, then fallback to old payment system
+        Long userId = SecurityUtils.getCurrentUserId().orElse(null);
+        boolean hasAccess = false;
+        
+        if (userId != null) {
+            // User is authenticated - check xu balance
+            Integer priceXu = affiliateService.getInterpretationPriceXu();
+            if (xuService.hasEnoughXu(userId, priceXu)) {
+                // Deduct xu and grant access
+                xuService.deductXu(userId, priceXu, chartHash, "Mua giải luận Tử Vi - " + chartHash);
+                hasAccess = true;
+                log.info("User {} purchased interpretation with {} xu", userId, priceXu);
+            }
+        }
+        
+        // Fallback to old payment system if not using xu
+        if (!hasAccess && fingerprintId != null && chartHash != null) {
+            try {
+                paymentService.verifyPaymentOrThrow(fingerprintId, "TUVI_INTERPRETATION", chartHash);
+                hasAccess = true;
+            } catch (Exception e) {
+                // Payment required
+                throw new IllegalArgumentException("Cần thanh toán hoặc đủ xu để xem giải luận. Giá: " + 
+                        (userId != null ? affiliateService.getInterpretationPriceXu() + " xu" : "thanh toán"));
+            }
+        }
+        
+        if (!hasAccess) {
+            throw new IllegalArgumentException("Cần đăng nhập và có đủ xu hoặc thanh toán để xem giải luận");
+        }
+        
         TuViInterpretationResponse response = tuViInterpretationService.generateInterpretation(request);
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/chart/interpretation/check")
+    @Operation(
+        summary = "Check payment status for Tu Vi interpretation",
+        description = "Check if payment has been made for a specific Tu Vi chart interpretation",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Payment status returned"
+            )
+        }
+    )
+    public ResponseEntity<PaymentCheckResponse> checkInterpretationPayment(
+            @Parameter(description = "Chart hash", required = true)
+            @RequestParam String chartHash,
+            HttpServletRequest httpRequest) {
+        
+        String fingerprintId = FingerprintInterceptor.getFingerprintId(httpRequest);
+        if (fingerprintId == null) {
+            throw new IllegalStateException("Fingerprint ID not found");
+        }
+        
+        PaymentCheckResponse response = paymentService.checkPaymentEligibility(
+                fingerprintId, "TUVI_INTERPRETATION", chartHash);
         
         return ResponseEntity.ok(response);
     }
@@ -150,7 +231,7 @@ public class TuViChartController {
     @Operation(
         summary = "Generate Tu Vi chart interpretation (GET)",
         description = "Generate detailed AI-powered interpretation using query parameters. " +
-                     "Alternative to POST endpoint.",
+                     "Alternative to POST endpoint. Payment is required.",
         responses = {
             @ApiResponse(
                 responseCode = "200",
@@ -160,6 +241,10 @@ public class TuViChartController {
             @ApiResponse(
                 responseCode = "400",
                 description = "Invalid request parameters"
+            ),
+            @ApiResponse(
+                responseCode = "402",
+                description = "Payment required"
             )
         }
     )
@@ -186,7 +271,9 @@ public class TuViChartController {
             @RequestParam String name,
             
             @Parameter(description = "Birth place (optional)")
-            @RequestParam(required = false) String birthPlace) {
+            @RequestParam(required = false) String birthPlace,
+            
+            HttpServletRequest httpRequest) {
         
         TuViChartRequest request = TuViChartRequest.builder()
                 .date(date)
@@ -199,6 +286,6 @@ public class TuViChartController {
                 .birthPlace(birthPlace)
                 .build();
         
-        return generateInterpretation(request);
+        return generateInterpretation(request, httpRequest);
     }
 }

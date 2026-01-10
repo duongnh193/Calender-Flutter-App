@@ -158,17 +158,15 @@ public class TuViChartService {
                 request
         );
 
-        // Step 13: Build final response (including chart hash for interpretation lookup)
+        // Step 13: Build final response (including chart hash for interpretation lookup and payment)
         TuViChartResponse response = TuViChartResponse.builder()
                 .center(center)
                 .palaces(palaceLayout.getPalaces())
                 .markers(markers)
                 .cycles(cycles)
                 .calculatedAt(ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                .chartHash(chartHash)
                 .build();
-
-        // Store chart hash in a transient field (or add to response DTO if needed)
-        // For now, the hash is saved in DB and can be retrieved when needed
         
         return response;
     }

@@ -126,15 +126,15 @@ public class InterpretationCompositionService {
                 center.getChuMenh(), 
                 chuMenhBrightness, 
                 Boolean.TRUE.equals(center.getMenhKhongChinhTinh()));
-        
+                
         String chuThanInterpretation = overviewEssayCompositionService.composeChuThanInterpretation(
                 center.getChuThan(), 
                 chuThanBrightness);
-        
+                
         String banMenhInterpretation = overviewEssayCompositionService.composeBanMenhInterpretation(
                 center.getBanMenh(), 
                 center.getBanMenhNguHanh());
-        
+                
         String cucInterpretation = overviewEssayCompositionService.composeCucInterpretation(
                 center.getCuc(), 
                 center.getCucValue(), 
@@ -317,7 +317,7 @@ public class InterpretationCompositionService {
         } else {
             summary = "Chưa có thông tin giải luận.";
         }
-        
+
         return summary;
     }
 
@@ -379,7 +379,7 @@ public class InterpretationCompositionService {
 
         return starAnalyses;
     }
-
+    
     /**
      * Convert Vietnamese star name to star code (enum name).
      * Example: "Thiên Cơ" -> "THIEN_CO", "Thái Âm" -> "THAI_AM"

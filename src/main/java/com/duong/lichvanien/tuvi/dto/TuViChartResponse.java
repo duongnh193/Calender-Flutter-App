@@ -36,6 +36,9 @@ public class TuViChartResponse {
     @Schema(description = "Calculation timestamp (for caching)")
     private String calculatedAt;
 
+    @Schema(description = "Unique hash identifying this chart (for payment/caching)")
+    private String chartHash;
+
     @Schema(description = "Debug information (only in dev mode)")
     private Map<String, Object> debug;
 }
