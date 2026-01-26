@@ -6,7 +6,9 @@ import com.duong.lichvanien.tuvi.dto.interpretation.CycleInterpretationResponse;
 import com.duong.lichvanien.tuvi.dto.interpretation.TuViInterpretationResponse;
 import com.duong.lichvanien.tuvi.entity.TuViCycleInterpretationEntity;
 import com.duong.lichvanien.tuvi.repository.TuViCycleInterpretationRepository;
+import com.duong.lichvanien.user.repository.ContentAccessRepository;
 import com.duong.lichvanien.user.service.PaymentService;
+import com.duong.lichvanien.xu.repository.XuTransactionRepository;
 import com.duong.lichvanien.xu.service.XuService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +53,12 @@ class TuViGrokInterpretationServiceTest {
     @Mock
     private PaymentService paymentService;
 
+    @Mock
+    private XuTransactionRepository xuTransactionRepository;
+
+    @Mock
+    private ContentAccessRepository contentAccessRepository;
+
     private ObjectMapper objectMapper;
     private TuViGrokInterpretationService service;
 
@@ -63,8 +71,10 @@ class TuViGrokInterpretationServiceTest {
                 interpretationDatabaseService,
                 cycleInterpretationRepository,
                 xuService,
+                xuTransactionRepository,
                 affiliateService,
                 paymentService,
+                contentAccessRepository,
                 objectMapper
         );
     }
@@ -108,7 +118,7 @@ class TuViGrokInterpretationServiceTest {
         when(cycleInterpretationRepository.findByChartHashAndGender(any(), any()))
                 .thenReturn(Optional.of(cachedEntity));
 
-        CycleInterpretationResponse result = service.generateCycleInterpretation(request);
+        CycleInterpretationResponse result = service.generateCycleInterpretation(request, "test-fingerprint");
 
         assertThat(result).isNotNull();
         assertThat(result.isFromCache()).isTrue();
