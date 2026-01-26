@@ -53,6 +53,12 @@ public class CycleCalculator {
         int startAge = calculateDaiVanStartAge(cucValue);
         int cyclePeriod = 10; // Each Đại Vận lasts 10 years
         
+        // Limit to 8 Đại Vận cycles (from childhood to around 80-85 years old)
+        // This is more realistic than showing all 12 cycles up to 120+ years
+        // Most people live 80-100 years, so 8 cycles (80 years) is appropriate
+        int maxCycles = 8;
+        int maxAge = startAge + (maxCycles * cyclePeriod) - 1; // e.g., 5 + 8*10 - 1 = 84
+        
         List<CycleInfo.DaiVanEntry> daiVanList = new ArrayList<>();
         
         // Direction: thuận means clockwise (increasing DiaChi index)
@@ -62,7 +68,7 @@ public class CycleCalculator {
         // Start from Mệnh palace
         int currentPalaceIndex = 0; // Mệnh is always at index 0 in the palace list
         
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < maxCycles; i++) {
             int age = startAge + (i * cyclePeriod);
             
             // Find the palace for this cycle
@@ -81,12 +87,16 @@ public class CycleCalculator {
             
             PalaceInfo palace = palaces.get(palaceIndexForCycle);
             
+            // For the last cycle, end age is maxAge (not age + cyclePeriod - 1)
+            // This makes it more realistic (e.g., "74+" instead of "84")
+            int endAge = (i == maxCycles - 1) ? maxAge : (age + cyclePeriod - 1);
+            
             // Create entry
             CycleInfo.DaiVanEntry entry = CycleInfo.DaiVanEntry.builder()
                     .palaceIndex(palaceIndexForCycle)
                     .palaceName(palace.getName())
                     .startAge(age)
-                    .endAge(age + cyclePeriod - 1)
+                    .endAge(endAge)
                     .label(String.valueOf(age))
                     .build();
             
