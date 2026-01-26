@@ -12,6 +12,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
  * Main service for generating Tu Vi (Purple Star Astrology) charts.
@@ -169,6 +170,45 @@ public class TuViChartService {
                 .build();
         
         return response;
+    }
+
+    /**
+     * Get chart by chart hash.
+     * Retrieves chart from database FACT data and regenerates the chart response.
+     * 
+     * @param chartHash Chart hash to lookup
+     * @return TuViChartResponse if found, throws exception if not found
+     */
+    public TuViChartResponse getChartByHash(String chartHash) {
+        log.info("Getting chart by hash: {}", chartHash);
+        
+        // Find natal chart entity from database
+        Optional<com.duong.lichvanien.tuvi.entity.NatalChartEntity> natalChartOpt = 
+                natalChartService.findByHash(chartHash);
+        
+        if (natalChartOpt.isEmpty()) {
+            log.warn("Chart not found for hash: {}", chartHash);
+            throw new IllegalArgumentException("Không tìm thấy lá số với mã hash: " + chartHash);
+        }
+        
+        com.duong.lichvanien.tuvi.entity.NatalChartEntity natalChart = natalChartOpt.get();
+        
+        // Reconstruct TuViChartRequest from entity
+        TuViChartRequest request = TuViChartRequest.builder()
+                .date(natalChart.getSolarDate().toString())
+                .hour(natalChart.getBirthHour())
+                .minute(natalChart.getBirthMinute())
+                .gender(natalChart.getGender().name())
+                .isLunar(natalChart.getIsLunar())
+                .isLeapMonth(natalChart.getIsLeapMonth())
+                .name("") // Name is not stored in FACT data
+                .build();
+        
+        // Regenerate chart (deterministic - will produce same result)
+        TuViChartResponse chart = generateChart(request);
+        
+        log.info("Successfully retrieved chart by hash: {}", chartHash);
+        return chart;
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.duong.lichvanien.user.controller;
 
 import com.duong.lichvanien.common.security.SecurityUtils;
-import com.duong.lichvanien.common.security.UserPrincipal;
 import com.duong.lichvanien.user.dto.PaymentCheckResponse;
 import com.duong.lichvanien.user.dto.PaymentRequest;
 import com.duong.lichvanien.user.dto.PaymentResponse;
@@ -36,17 +35,28 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/create")
-    @Operation(summary = "Create payment", description = "Create a new payment transaction")
+    @Operation(summary = "Create payment", description = "Create a new payment transaction. Requires registered user.")
     public ResponseEntity<PaymentResponse> createPayment(
             @Valid @RequestBody PaymentRequest request,
             HttpServletRequest httpRequest) {
+        
+        // Block anonymous users
+        if (SecurityUtils.isAnonymous()) {
+            log.warn("Anonymous user attempted to create payment");
+            throw new IllegalArgumentException(
+                    "Vui lòng đăng ký tài khoản để thanh toán và xem giải luận đầy đủ."
+            );
+        }
+        
+        // Require authenticated user
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         
         String fingerprintId = FingerprintInterceptor.getFingerprintId(httpRequest);
         if (fingerprintId == null) {
             throw new IllegalStateException("Fingerprint ID not found");
         }
         
-        Long userId = SecurityUtils.getCurrentUserId().orElse(null);
         Long sessionId = null; // Would need to be extracted from token if needed
         
         PaymentResponse response = paymentService.createTransaction(
@@ -145,7 +155,9 @@ public class PaymentController {
 
     @GetMapping("/history")
     @Operation(summary = "Get payment history", 
-               description = "Get payment history for the authenticated user")
+               description = "Get payment history for the authenticated user. " +
+                           "Note: This endpoint returns payment_transaction records only. " +
+                           "For Xu transactions (nạp xu), use /api/v1/xu/transactions endpoint.")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Page<PaymentTransactionEntity>> getPaymentHistory(
             @RequestParam(defaultValue = "0") int page,
@@ -154,7 +166,13 @@ public class PaymentController {
         Long userId = SecurityUtils.getCurrentUserId()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
         
+        log.info("Getting payment history for user {} (page={}, size={})", userId, page, size);
+        
         Page<PaymentTransactionEntity> transactions = paymentService.getUserTransactions(userId, page, size);
+        
+        log.info("Found {} payment transactions for user {} (total: {})", 
+                transactions.getNumberOfElements(), userId, transactions.getTotalElements());
+        
         return ResponseEntity.ok(transactions);
     }
 

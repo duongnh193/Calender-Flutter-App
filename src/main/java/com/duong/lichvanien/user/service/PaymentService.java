@@ -12,11 +12,13 @@ import com.duong.lichvanien.user.exception.PaymentRequiredException;
 import com.duong.lichvanien.user.repository.ContentAccessRepository;
 import com.duong.lichvanien.user.repository.PaymentTransactionRepository;
 import com.duong.lichvanien.user.repository.UserRepository;
+import com.duong.lichvanien.xu.service.XuService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,7 @@ public class PaymentService {
     private final ContentAccessRepository contentAccessRepository;
     private final UserRepository userRepository;
     private final FingerprintService fingerprintService;
+    private final XuService xuService;
 
     /**
      * Create a payment transaction.
@@ -256,9 +259,30 @@ public class PaymentService {
 
     /**
      * Get transactions for a user.
+     * This method returns payment transactions. For Xu transactions, use XuService.getTransactionHistory().
+     * Note: This endpoint may return empty if user only has Xu transactions.
      */
     public Page<PaymentTransactionEntity> getUserTransactions(Long userId, int page, int size) {
-        return transactionRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size));
+        Page<PaymentTransactionEntity> paymentTransactions = transactionRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size));
+        
+        // Log for debugging
+        log.debug("Found {} payment transactions for user {}", paymentTransactions.getTotalElements(), userId);
+        
+        // If no payment transactions, check if user has Xu transactions
+        if (paymentTransactions.getTotalElements() == 0) {
+            try {
+                Pageable pageable = PageRequest.of(0, 1);
+                var xuTransactions = xuService.getTransactionHistory(userId, pageable);
+                if (xuTransactions.getTotalElements() > 0) {
+                    log.info("User {} has {} Xu transactions but no payment transactions. Consider using /api/v1/xu/transactions endpoint.", 
+                            userId, xuTransactions.getTotalElements());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to check Xu transactions for user {}: {}", userId, e.getMessage());
+            }
+        }
+        
+        return paymentTransactions;
     }
 
     /**

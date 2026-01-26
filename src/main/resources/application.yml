@@ -78,9 +78,9 @@ jwt:
 # SePay Configuration
 sepay:
   api-key: ${SEPAY_API_KEY:}
-  bank-account: ${SEPAY_BANK_ACCOUNT:}
-  bank-name: ${SEPAY_BANK_NAME:}
-  account-name: ${SEPAY_ACCOUNT_NAME:}
+  bank-account: ${SEPAY_BANK_ACCOUNT:0934519303142}
+  bank-name: ${SEPAY_BANK_NAME:MB Bank}
+  account-name: ${SEPAY_ACCOUNT_NAME:NGUYEN HOANG DUONG}
   webhook-secret: ${SEPAY_WEBHOOK_SECRET:}
   content-prefix: ${SEPAY_CONTENT_PREFIX:}
 

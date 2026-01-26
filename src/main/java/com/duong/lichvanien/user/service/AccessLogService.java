@@ -141,6 +141,77 @@ public class AccessLogService {
     }
 
     /**
+     * Check if user can call cycles interpretation API.
+     * Registered users have unlimited access, anonymous users are limited to 3 calls per day.
+     * 
+     * @param fingerprintId Fingerprint ID (required for anonymous)
+     * @param userId User ID (null for anonymous)
+     * @return true if can call, false if exceeded limit
+     */
+    public boolean canCallCyclesInterpretation(String fingerprintId, Long userId) {
+        // Registered user: không giới hạn
+        if (userId != null) {
+            return true;
+        }
+        
+        // Anonymous user: giới hạn 3 lần/ngày
+        if (fingerprintId == null) {
+            return false; // Không có fingerprintId → không cho phép
+        }
+        
+        LocalDateTime startOfDay = LocalDateTime.now()
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+        
+        String endpoint = "/api/v1/tuvi/grok/interpretation/cycles";
+        
+        long count = accessLogRepository.countByFingerprintAndEndpointSince(
+                fingerprintId, 
+                endpoint, 
+                startOfDay
+        );
+        
+        return count < 3;
+    }
+
+    /**
+     * Get remaining cycles interpretation calls for today.
+     * 
+     * @param fingerprintId Fingerprint ID
+     * @param userId User ID (null for anonymous)
+     * @return Remaining calls (-1 for unlimited, 0-3 for anonymous)
+     */
+    public long getRemainingCyclesCalls(String fingerprintId, Long userId) {
+        // Registered user: unlimited
+        if (userId != null) {
+            return -1; // -1 means unlimited
+        }
+        
+        // Anonymous user: calculate remaining
+        if (fingerprintId == null) {
+            return 0;
+        }
+        
+        LocalDateTime startOfDay = LocalDateTime.now()
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+        
+        String endpoint = "/api/v1/tuvi/grok/interpretation/cycles";
+        
+        long count = accessLogRepository.countByFingerprintAndEndpointSince(
+                fingerprintId, 
+                endpoint, 
+                startOfDay
+        );
+        
+        return Math.max(0, 3 - count);
+    }
+
+    /**
      * Hash a string using SHA-256.
      */
     private String hashString(String input) {

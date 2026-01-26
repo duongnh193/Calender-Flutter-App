@@ -70,32 +70,41 @@ public class TuViChartController {
 
     @GetMapping("/chart")
     @Operation(
-        summary = "Generate Tu Vi chart (GET)",
-        description = "Generate a Tu Vi chart using query parameters. Alternative to POST endpoint.",
+        summary = "Get or Generate Tu Vi chart (GET)",
+        description = "Get chart by chartHash, or generate a new chart using query parameters. " +
+                     "If chartHash is provided, retrieves existing chart from database. " +
+                     "Otherwise, generates a new chart from birth parameters.",
         responses = {
             @ApiResponse(
                 responseCode = "200",
-                description = "Chart generated successfully",
+                description = "Chart retrieved or generated successfully",
                 content = @Content(schema = @Schema(implementation = TuViChartResponse.class))
             ),
             @ApiResponse(
                 responseCode = "400",
                 description = "Invalid request parameters"
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Chart not found for provided chartHash"
             )
         }
     )
-    public ResponseEntity<TuViChartResponse> generateChartGet(
-            @Parameter(description = "Birth date (yyyy-MM-dd)", example = "1995-03-02", required = true)
-            @RequestParam String date,
+    public ResponseEntity<TuViChartResponse> getChart(
+            @Parameter(description = "Chart hash to retrieve existing chart")
+            @RequestParam(required = false) String chartHash,
             
-            @Parameter(description = "Birth hour (0-23)", example = "8", required = true)
-            @RequestParam Integer hour,
+            @Parameter(description = "Birth date (yyyy-MM-dd) - required if chartHash not provided", example = "1995-03-02")
+            @RequestParam(required = false) String date,
+            
+            @Parameter(description = "Birth hour (0-23) - required if chartHash not provided", example = "8")
+            @RequestParam(required = false) Integer hour,
             
             @Parameter(description = "Birth minute (0-59)", example = "30")
             @RequestParam(defaultValue = "0") Integer minute,
             
-            @Parameter(description = "Gender (male/female)", example = "female", required = true)
-            @RequestParam String gender,
+            @Parameter(description = "Gender (male/female) - required if chartHash not provided", example = "female")
+            @RequestParam(required = false) String gender,
             
             @Parameter(description = "Is lunar date", example = "false")
             @RequestParam(defaultValue = "false") Boolean isLunar,
@@ -108,6 +117,29 @@ public class TuViChartController {
             
             @Parameter(description = "Birth place (optional, for display)")
             @RequestParam(required = false) String birthPlace) {
+        
+        // If chartHash is provided, retrieve chart from database
+        if (chartHash != null && !chartHash.isEmpty()) {
+            log.info("Retrieving chart by hash: {}", chartHash);
+            try {
+                TuViChartResponse chart = tuViChartService.getChartByHash(chartHash);
+                return ResponseEntity.ok(chart);
+            } catch (IllegalArgumentException e) {
+                log.error("Chart not found for hash: {}", chartHash);
+                return ResponseEntity.notFound().build();
+            } catch (Exception e) {
+                log.error("Error retrieving chart by hash: {}", chartHash, e);
+                throw new RuntimeException("Lỗi khi lấy lá số từ database: " + e.getMessage(), e);
+            }
+        }
+        
+        // Otherwise, generate new chart from parameters
+        if (date == null || hour == null || gender == null) {
+            throw new IllegalArgumentException(
+                "Either chartHash or (date, hour, gender) must be provided");
+        }
+        
+        log.info("Generating new chart from parameters: date={}, hour={}, gender={}", date, hour, gender);
         
         TuViChartRequest request = TuViChartRequest.builder()
                 .date(date)

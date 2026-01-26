@@ -66,5 +66,15 @@ public class CycleInterpretationResponse {
 
     @Schema(description = "Whether this is from cache")
     private boolean fromCache;
+
+    // === Fingerprint Usage Info (for anonymous users) ===
+    @Schema(description = "Number of times this fingerprint has viewed cycle interpretation", example = "2")
+    private Integer fingerprintUsageCount;
+
+    @Schema(description = "Remaining free views for this fingerprint", example = "1")
+    private Integer fingerprintRemainingUsage;
+
+    @Schema(description = "Whether this fingerprint has reached the limit", example = "false")
+    private Boolean fingerprintHasReachedLimit;
 }
 

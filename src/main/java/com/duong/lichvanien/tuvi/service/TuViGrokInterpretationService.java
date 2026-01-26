@@ -8,6 +8,8 @@ import com.duong.lichvanien.tuvi.dto.interpretation.DaiVanInterpretation;
 import com.duong.lichvanien.tuvi.dto.interpretation.TuViInterpretationResponse;
 import com.duong.lichvanien.tuvi.entity.TuViCycleInterpretationEntity;
 import com.duong.lichvanien.tuvi.repository.TuViCycleInterpretationRepository;
+import com.duong.lichvanien.user.entity.ContentAccessEntity;
+import com.duong.lichvanien.user.repository.ContentAccessRepository;
 import com.duong.lichvanien.user.service.PaymentService;
 import com.duong.lichvanien.xu.entity.XuTransactionEntity;
 import com.duong.lichvanien.xu.enums.XuTransactionType;
@@ -45,7 +47,18 @@ public class TuViGrokInterpretationService {
     private final XuTransactionRepository xuTransactionRepository;
     private final AffiliateService affiliateService;
     private final PaymentService paymentService;
+    private final ContentAccessRepository contentAccessRepository;
     private final ObjectMapper objectMapper;
+
+    /**
+     * Maximum number of free cycle interpretations allowed for anonymous users per fingerprint.
+     */
+    private static final int MAX_CYCLE_INTERPRETATION_ANONYMOUS = 3;
+    
+    /**
+     * Content type for cycle interpretation tracking.
+     */
+    private static final String CONTENT_TYPE_CYCLE_INTERPRETATION = "TUVI_CYCLE_INTERPRETATION";
 
     /**
      * Generate full Tu Vi interpretation.
@@ -96,14 +109,19 @@ public class TuViGrokInterpretationService {
     /**
      * Generate cycle (Đại hạn/Tiểu vận) interpretation.
      * This is FREE content - no payment required.
-     * First checks cache, then calls Grok API if not cached.
+     * For anonymous users, tracks usage per fingerprint (max 3 times).
+     * Uses double-check pattern to prevent duplicate API calls in race conditions.
      *
      * @param request Chart request
-     * @return Cycle interpretation response
+     * @param fingerprintId Fingerprint ID (nullable for authenticated users)
+     * @return Cycle interpretation response with usage info
      */
     @Transactional
-    public CycleInterpretationResponse generateCycleInterpretation(TuViChartRequest request) {
-        log.info("Generating cycle interpretation for: {}", request.getName());
+    public CycleInterpretationResponse generateCycleInterpretation(TuViChartRequest request, String fingerprintId) {
+        log.info("Generating cycle interpretation for: {}, fingerprintId: {}", request.getName(), fingerprintId);
+
+        // Note: Daily limit check is now done in controller using AccessLogService
+        // AccessLogInterceptor will automatically log this request to access_log
 
         // Generate chart first to get chart hash and cycle info
         TuViChartResponse chart = chartService.generateChart(request);
@@ -111,33 +129,53 @@ public class TuViGrokInterpretationService {
         TuViCycleInterpretationEntity.Gender gender = 
                 TuViCycleInterpretationEntity.Gender.valueOf(request.getGender().toLowerCase());
 
-        // Check cache in database
+        // First check: Look for cached interpretation
         Optional<TuViCycleInterpretationEntity> cached = 
                 cycleInterpretationRepository.findByChartHashAndGender(chartHash, gender);
 
+        CycleInterpretationResponse response;
         if (cached.isPresent()) {
             log.info("Found cached cycle interpretation for chart hash: {}", chartHash);
-            return convertEntityToResponse(cached.get(), chart);
+            response = convertEntityToResponse(cached.get(), chart);
+        } else {
+            // Not in cache - call Grok API
+            // Note: In race conditions, multiple requests might reach here simultaneously
+            log.info("Calling Grok API for cycle interpretation, chart hash: {}", chartHash);
+            response = grokAIService.generateCycleInterpretation(
+                    chart, request.getName(), request.getGender());
+
+            if (response == null) {
+                log.error("Failed to generate cycle interpretation from Grok API");
+                throw new RuntimeException("Không thể tạo giải luận đại vận. Vui lòng thử lại sau.");
+            }
+
+            // Second check: Verify cache again AFTER API call but BEFORE save
+            // This prevents duplicate API calls when multiple requests race to generate the same interpretation
+            Optional<TuViCycleInterpretationEntity> cachedAfterApi = 
+                    cycleInterpretationRepository.findByChartHashAndGender(chartHash, gender);
+            
+            if (cachedAfterApi.isPresent()) {
+                // Another request already saved it while we were calling API
+                // Use the cached version instead of saving duplicate
+                log.info("Found cached cycle interpretation after API call (race condition detected), " +
+                        "using cached version for chart hash: {}", chartHash);
+                response = convertEntityToResponse(cachedAfterApi.get(), chart);
+            } else {
+                // Still not in cache - safe to save
+                // Note: saveCycleInterpretationToCache uses upsert logic to handle any remaining race conditions
+                try {
+                    saveCycleInterpretationToCache(response, chart, request);
+                    log.info("Saved cycle interpretation to cache for chart hash: {}", chartHash);
+                } catch (Exception e) {
+                    log.warn("Failed to save cycle interpretation to cache: {}", e.getMessage());
+                    // Continue - still return the response (it was successfully generated)
+                }
+            }
         }
 
-        // Not in cache - call Grok API
-        log.info("Calling Grok API for cycle interpretation, chart hash: {}", chartHash);
-        CycleInterpretationResponse response = grokAIService.generateCycleInterpretation(
-                chart, request.getName(), request.getGender());
-
-        if (response == null) {
-            log.error("Failed to generate cycle interpretation from Grok API");
-            throw new RuntimeException("Không thể tạo giải luận đại vận. Vui lòng thử lại sau.");
-        }
-
-        // Save to cache
-        try {
-            saveCycleInterpretationToCache(response, chart, request);
-            log.info("Saved cycle interpretation to cache for chart hash: {}", chartHash);
-        } catch (Exception e) {
-            log.warn("Failed to save cycle interpretation to cache: {}", e.getMessage());
-            // Continue - still return the response
-        }
+        // Note: Usage tracking is now done via access_log table (logged by AccessLogInterceptor)
+        // Usage info can be retrieved from AccessLogService if needed in response
+        // For now, we don't set usage info in response as it's handled by controller
 
         return response;
     }
@@ -240,15 +278,37 @@ public class TuViGrokInterpretationService {
 
     /**
      * Save cycle interpretation to cache.
+     * Uses upsert logic: update if exists, insert if not.
+     * This prevents duplicate key errors in race conditions.
      */
     private void saveCycleInterpretationToCache(
             CycleInterpretationResponse response, 
             TuViChartResponse chart,
             TuViChartRequest request) throws JsonProcessingException {
         
-        TuViCycleInterpretationEntity entity = new TuViCycleInterpretationEntity();
-        entity.setChartHash(chart.getChartHash());
-        entity.setGender(TuViCycleInterpretationEntity.Gender.valueOf(request.getGender().toLowerCase()));
+        String chartHash = chart.getChartHash();
+        TuViCycleInterpretationEntity.Gender gender = 
+                TuViCycleInterpretationEntity.Gender.valueOf(request.getGender().toLowerCase());
+        
+        // Check if already exists (handle race condition)
+        Optional<TuViCycleInterpretationEntity> existingOpt = 
+                cycleInterpretationRepository.findByChartHashAndGender(chartHash, gender);
+        
+        TuViCycleInterpretationEntity entity;
+        if (existingOpt.isPresent()) {
+            // Update existing entity
+            entity = existingOpt.get();
+            log.debug("Updating existing cycle interpretation for chart hash: {}, gender: {}", chartHash, gender);
+        } else {
+            // Create new entity
+            entity = new TuViCycleInterpretationEntity();
+            entity.setChartHash(chartHash);
+            entity.setGender(gender);
+            entity.setGeneratedAt(LocalDateTime.now());
+            log.debug("Creating new cycle interpretation for chart hash: {}, gender: {}", chartHash, gender);
+        }
+        
+        // Update fields (both for new and existing)
         entity.setName(request.getName());
         
         if (request.getDate() != null) {
@@ -265,7 +325,6 @@ public class TuViGrokInterpretationService {
         entity.setCycleInterpretationData(objectMapper.writeValueAsString(interpretationData));
         
         entity.setAiModel(response.getAiModel());
-        entity.setGeneratedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
         
         cycleInterpretationRepository.save(entity);
@@ -310,6 +369,59 @@ public class TuViGrokInterpretationService {
         } catch (Exception e) {
             log.error("Error converting cycle interpretation entity to response: {}", e.getMessage(), e);
             throw new RuntimeException("Lỗi đọc dữ liệu cache", e);
+        }
+    }
+
+    /**
+     * Get cycle interpretation usage count for a fingerprint.
+     * Uses ContentAccessEntity to track usage per fingerprint.
+     *
+     * @param fingerprintId Fingerprint ID
+     * @return Usage count (0 if never used)
+     */
+    private int getCycleInterpretationUsageCount(String fingerprintId) {
+        Optional<ContentAccessEntity> access = contentAccessRepository
+                .findByFingerprintIdAndContentTypeAndContentId(
+                        fingerprintId, CONTENT_TYPE_CYCLE_INTERPRETATION, fingerprintId);
+        
+        if (access.isPresent() && access.get().getIsActive()) {
+            return access.get().getAccessCount();
+        }
+        
+        return 0;
+    }
+
+    /**
+     * Track cycle interpretation usage for a fingerprint.
+     * Creates or updates ContentAccessEntity to record usage.
+     *
+     * @param fingerprintId Fingerprint ID
+     */
+    @Transactional
+    private void trackCycleInterpretationUsage(String fingerprintId) {
+        Optional<ContentAccessEntity> existing = contentAccessRepository
+                .findByFingerprintIdAndContentTypeAndContentId(
+                        fingerprintId, CONTENT_TYPE_CYCLE_INTERPRETATION, fingerprintId);
+        
+        if (existing.isPresent()) {
+            // Update existing access record
+            ContentAccessEntity access = existing.get();
+            access.recordAccess();
+            contentAccessRepository.save(access);
+            log.debug("Incremented cycle interpretation usage for fingerprint: {}, count: {}", 
+                    fingerprintId, access.getAccessCount());
+        } else {
+            // Create new access record
+            ContentAccessEntity access = ContentAccessEntity.builder()
+                    .fingerprintId(fingerprintId)
+                    .contentType(CONTENT_TYPE_CYCLE_INTERPRETATION)
+                    .contentId(fingerprintId) // Use fingerprintId as contentId for tracking
+                    .accessCount(1)
+                    .lastAccessedAt(LocalDateTime.now())
+                    .isActive(true)
+                    .build();
+            contentAccessRepository.save(access);
+            log.debug("Created new cycle interpretation usage record for fingerprint: {}", fingerprintId);
         }
     }
 }
