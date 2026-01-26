@@ -1,0 +1,28 @@
+# Backend Docker ignore
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Build
+target/
+!target/*.jar
+
+# Test
+src/test/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
