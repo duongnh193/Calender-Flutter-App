@@ -14,7 +14,7 @@ CREATE TABLE zodiac (
     code      VARCHAR(16) NOT NULL UNIQUE COMMENT 'ascii slug: ti, suu, dan...',
     name_vi   VARCHAR(32) NOT NULL COMMENT 'tên hiển thị: "Tý", "Sửu"...',
     order_no  TINYINT NOT NULL,
-    
+
     INDEX idx_code (code),
     INDEX idx_order_no (order_no)
 ) ENGINE=InnoDB
@@ -39,7 +39,7 @@ CREATE TABLE day_info (
     can_chi_year     VARCHAR(32) NOT NULL,
     good_day_type    ENUM('NORMAL', 'HOANG_DAO', 'HAC_DAO') NOT NULL DEFAULT 'NORMAL',
     note             VARCHAR(255) NULL,
-    
+
     KEY idx_lunar (lunar_year, lunar_month, lunar_day, lunar_leap_month)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
@@ -57,7 +57,7 @@ CREATE TABLE zodiac_hour (
     branch_code VARCHAR(16) NOT NULL COMMENT 'tham chiếu zodiac.code (ti, suu,...)',
     start_hour  TINYINT NOT NULL COMMENT '0–23',
     end_hour    TINYINT NOT NULL COMMENT '0–23',
-    
+
     CONSTRAINT uq_zodiac_hour_branch UNIQUE (branch_code),
     CONSTRAINT fk_zodiac_hour_branch
         FOREIGN KEY (branch_code) REFERENCES zodiac(code)
@@ -78,7 +78,7 @@ CREATE TABLE golden_hour_pattern (
     id               BIGINT AUTO_INCREMENT PRIMARY KEY,
     day_branch_code  VARCHAR(16) NOT NULL COMMENT 'vd: "ti","suu","dan"',
     good_branch_codes VARCHAR(255) NOT NULL COMMENT 'CSV: "ti,suu,thin,ty,than,dau"',
-    
+
     CONSTRAINT uq_golden_day_branch UNIQUE (day_branch_code),
     CONSTRAINT fk_golden_day_branch
         FOREIGN KEY (day_branch_code) REFERENCES zodiac(code)
@@ -88,6 +88,14 @@ CREATE TABLE golden_hour_pattern (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci
   COMMENT='Mapping ĐỊA CHI NGÀY -> list ĐỊA CHI GIỜ hoàng đạo';
+
+DROP TABLE IF EXISTS good_day_rule;
+CREATE TABLE good_day_rule (
+                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                               lunar_month INT NOT NULL,
+                               branch_code VARCHAR(10) NOT NULL,
+                               fortune_type ENUM('NORMAL','HOANG_DAO','HAC_DAO') NOT NULL DEFAULT 'NORMAL'
+);
 
 SET FOREIGN_KEY_CHECKS = 1;
 
