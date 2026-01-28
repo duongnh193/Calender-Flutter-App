@@ -12,11 +12,11 @@ SET NAMES utf8mb4;
 -- Add normalized can_chi column (lowercase, no spaces) for faster lookups
 -- Note: MySQL doesn't have a built-in accent remover, so we just normalize spaces and case
 ALTER TABLE horoscope_lifetime
-    ADD COLUMN IF NOT EXISTS can_chi_norm VARCHAR(128)
+    ADD COLUMN  can_chi_norm VARCHAR(128)
         GENERATED ALWAYS AS (LOWER(REPLACE(can_chi, ' ', ''))) STORED;
 
 -- Create index on normalized can_chi + gender for fast lookups
-CREATE INDEX IF NOT EXISTS idx_hl_canchi_norm_gender
+CREATE INDEX idx_hl_canchi_norm_gender
     ON horoscope_lifetime(can_chi_norm, gender);
 
 -- ==========================================
@@ -24,14 +24,14 @@ CREATE INDEX IF NOT EXISTS idx_hl_canchi_norm_gender
 -- ==========================================
 
 -- Create composite index for fallback lookups by zodiac_id + gender
-CREATE INDEX IF NOT EXISTS idx_hl_zodiac_gender
+CREATE INDEX idx_hl_zodiac_gender
     ON horoscope_lifetime(zodiac_id, gender);
 
 -- ==========================================
 -- 3. Add index on zodiac_id alone for general queries
 -- ==========================================
 
-CREATE INDEX IF NOT EXISTS idx_hl_zodiac
+CREATE INDEX idx_hl_zodiac
     ON horoscope_lifetime(zodiac_id);
 
 -- ==========================================
