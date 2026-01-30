@@ -24,6 +24,7 @@ public class UserResponse {
     private String phone;
     private String fullName;
     private UserStatus status;
+    private String referralCode;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
 
@@ -41,6 +42,7 @@ public class UserResponse {
                 .phone(entity.getPhone())
                 .fullName(entity.getFullName())
                 .status(entity.getStatus())
+                .referralCode(entity.getReferralCode())
                 .createdAt(entity.getCreatedAt())
                 .lastLoginAt(entity.getLastLoginAt())
                 .build();
