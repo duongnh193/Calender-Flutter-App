@@ -95,6 +95,15 @@ grok:
     max-tokens: ${GROK_API_MAX_TOKENS:4000}
     temperature: ${GROK_API_TEMPERATURE:0.7}
 
+# OpenAI TTS Configuration
+openai:
+  tts:
+    api-key: ${OPENAI_TTS_API_KEY:}
+    base-url: ${OPENAI_TTS_BASE_URL:https://api.openai.com/v1}
+    model: ${OPENAI_TTS_MODEL:tts-1}
+    voice: ${OPENAI_TTS_VOICE:alloy}
+    speed: ${OPENAI_TTS_SPEED:1.0}
+
 # Logging configuration
 logging:
   level:
